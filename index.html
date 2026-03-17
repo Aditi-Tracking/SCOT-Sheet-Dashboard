@@ -22,7 +22,7 @@ table{font-family:inherit;border-collapse:collapse}td,th{border:none}
 </head>
 <body>
 <div id="root"><p style="padding:40px;text-align:center;color:#999">Loading...</p></div>
-<script>window.onerror=function(m,s,l,c,e){document.getElementById("root").innerHTML='<pre style="padding:20px;color:red;font-size:12px;white-space:pre-wrap">'+m+'\nLine:'+l+'\n'+(e&&e.stack||'')+'</pre>'}</script>
+<script>window.onerror=function(m,s,l){if(m==="Script error."||l===0)return true;document.getElementById("root").innerHTML='<pre style="padding:20px;color:red;font-size:12px">'+m+'</pre>'}</script>
 <script type="text/babel">
 var useState=React.useState,useMemo=React.useMemo,useEffect=React.useEffect,useCallback=React.useCallback,useRef=React.useRef;
 var T={teal:"#3c8d99",tealDark:"#2a7080",tealDeep:"#1b5b66",pink:"#e8175d",pinkLight:"#fce4ec",yellow:"#f7c948",yellowLight:"#fff8e1",green:"#27ae60",greenLight:"#e8f5e9",orange:"#e67e22"};
