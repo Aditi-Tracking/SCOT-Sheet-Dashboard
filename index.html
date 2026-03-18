@@ -84,28 +84,57 @@ var wk=WEEKS[selWeek];
 var goToday=function(){setSelWeek(_tw);setSelDay(_td)};
 var isToday=selWeek===_tw&&selDay===_td;
 
-var fetchOne=useCallback(function(person){return new Promise(function(resolve){
+var fetchOne=useCallback(function(person){
+function viaFetch(){
+return fetch(person.url+"?_t="+Date.now(),{redirect:"follow"})
+.then(function(r){return r.json()})
+.then(function(r){
+if(r&&r.success&&r.data){
+console.log("[FETCH OK] "+person.name+": "+r.data.length+" clients");
+return r.data.map(function(c){return Object.assign({},c,{_person:person.name})});
+}
+console.warn("[FETCH] "+person.name+": response not valid",r);return[];
+}).catch(function(e){console.warn("[FETCH FAIL] "+person.name+": "+e.message);return null});
+}
+function viaJSONP(){
+return new Promise(function(resolve){
 try{var cb="_cb_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
 var u=person.url+(person.url.indexOf("?")>=0?"&":"?")+"callback="+cb+"&_t="+Date.now();
-var tm=setTimeout(function(){done();resolve([])},8000);
+var tm=setTimeout(function(){done();console.warn("[JSONP TIMEOUT] "+person.name);resolve([])},10000);
 function done(){clearTimeout(tm);delete window[cb];try{var el=document.getElementById(cb);if(el)el.parentNode.removeChild(el)}catch(x){}}
-window[cb]=function(r){done();if(r&&r.success&&r.data){resolve(r.data.map(function(c){return Object.assign({},c,{_person:person.name})}))}else{resolve([])}};
-var sc=document.createElement("script");sc.id=cb;sc.src=u;sc.onerror=function(){done();resolve([])};document.head.appendChild(sc);
+window[cb]=function(r){done();if(r&&r.success&&r.data){console.log("[JSONP OK] "+person.name+": "+r.data.length+" clients");resolve(r.data.map(function(c){return Object.assign({},c,{_person:person.name})}))}else{console.warn("[JSONP] "+person.name+": response not valid");resolve([])}};
+var sc=document.createElement("script");sc.id=cb;sc.src=u;sc.onerror=function(){done();console.warn("[JSONP ERR] "+person.name);resolve([])};document.head.appendChild(sc);
 }catch(x){resolve([])}
-})},[]);
+});
+}
+return viaFetch().then(function(result){
+if(result&&result.length>0)return result;
+console.log("[FALLBACK] "+person.name+": trying JSONP...");
+return viaJSONP();
+});
+},[]);
 
 var fetchAll=useCallback(function(silent){
 if(!silent)setLoading(true);
+console.log("[SYNC] Starting data fetch for "+PERSONS.length+" persons...");
 var start=Date.now();
 var pending=PERSONS.length;
+var anySuccess=false;
 PERSONS.forEach(function(p){
 fetchOne(p).then(function(data){
 pending--;
 if(data.length>0){
+anySuccess=true;
 setAllData(function(prev){var next=Object.assign({},prev);next[p.name]=data;return next});
 setConnected(true);setLastSync(new Date());setFetchTime(Date.now()-start);
+}else{
+console.warn("[SYNC] "+p.name+": no data returned");
 }
-if(pending===0&&!silent)setLoading(false);
+if(pending===0){
+if(!silent)setLoading(false);
+if(!anySuccess)console.error("[SYNC] ALL fetches failed - showing fallback data");
+else console.log("[SYNC] Complete in "+(Date.now()-start)+"ms");
+}
 })
 })
 },[fetchOne]);
