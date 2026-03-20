@@ -56,40 +56,47 @@ if(rv==="YES"||rv==="NO")nc[dn]=rv;
 }}
 }
 
-/* --- outstanding: try every possible field name --- */
+/* --- outstanding: normalize ALL keys (strip newlines) then match --- */
 var out=0;
-var outKeys=["outstanding","Outstanding","current_outstanding","currentOutstanding",
-"Current Outstanding","CurrentOutstanding","outstanding_amount","Outstanding Amount",
-"OutstandingAmount","amount","Amount","Current_Outstanding","outstanding amount"];
-for(var i=0;i<outKeys.length;i++){
-var val=c[outKeys[i]];
+/* First, build a lookup of all keys with newlines replaced by spaces */
+var normKeys={};
+for(var nk in c){if(c.hasOwnProperty(nk)){
+normKeys[nk.replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim().toLowerCase()]=nk;
+}}
+/* Try known outstanding field names against normalized keys */
+var outNames=["outstanding amount","outstanding","current outstanding","amount"];
+for(var i=0;i<outNames.length;i++){
+var realKey=normKeys[outNames[i]];
+if(realKey!==undefined){
+var val=c[realKey];
 if(val!==undefined&&val!==null&&val!==""){
-var parsed=parseFloat(String(val).replace(/[^0-9.\-]/g,""));
+var parsed=(typeof val==="number")?val:parseFloat(String(val).replace(/[^0-9.\-]/g,""));
 if(!isNaN(parsed)){out=parsed;break}
 }
 }
-/* If still 0, scan ALL keys for any numeric field with "outstanding" or "amount" in the name */
+}
+/* Last resort: scan all keys for anything with "outstanding" or "amount" */
 if(out===0){
 for(var key in c){if(c.hasOwnProperty(key)&&key!=="calls"&&key!=="_person"){
-var lk=String(key).toLowerCase();
+var lk=key.replace(/[\r\n]+/g,' ').toLowerCase();
 if(lk.indexOf("outstanding")>=0||lk.indexOf("amount")>=0){
-var pv=parseFloat(String(c[key]).replace(/[^0-9.\-]/g,""));
+var pv=(typeof c[key]==="number")?c[key]:parseFloat(String(c[key]).replace(/[^0-9.\-]/g,""));
 if(!isNaN(pv)&&pv!==0){out=pv;break}
 }
 }}
 }
 
-/* --- name --- */
-var nm=String(c.name||c.Name||c["Client Name"]||c.clientName||c.client_name||"").trim();
+/* --- name: use normalized key lookup --- */
+var nm=String(c[normKeys["client name"]]||c[normKeys["name"]]||c.name||c.Name||"").trim();
 
 /* --- category --- */
-var cat=String(c.category||c.Category||c.tier||c.Tier||"").trim().toUpperCase();
+var cat=String(c[normKeys["category"]]||c.category||c.Category||"").replace(/[\r\n]+/g,' ').trim().toUpperCase();
 
 /* --- outstanding days --- */
-var od=String(c.outstandingDays||c.OutstandingDays||c["Outstanding From(Days)"]||c.outstandingFrom||c["Outstanding Days"]||c.outstanding_days||"").trim();
+var od=String(c[normKeys["outstanding from(days)"]]||c[normKeys["outstanding from (days)"]]||c[normKeys["outstanding days"]]||c.outstandingDays||c.OutstandingDays||"").replace(/[\r\n]+/g,' ').trim();
 
 /* --- frequency --- */
-var freq=String(c.frequency||c.Frequency||c["Frequency Of Calling"]||c.frequencyOfCalling||c.frequency_of_calling||"").trim();
+var freq=String(c[normKeys["frequency of calling"]]||c[normKeys["frequency"]]||c.frequency||c.Frequency||"").replace(/[\r\n]+/g,' ').trim();
 
 return{name:nm,category:cat,outstanding:out,outstandingDays:od,frequency:freq,calls:nc,_person:c._person||""}
 }
