@@ -142,7 +142,25 @@ else console.log("[SYNC] Complete in "+(Date.now()-start)+"ms");
 useEffect(function(){fetchAll(false)},[]);
 useEffect(function(){if(!connected)return;if(tr.current)clearInterval(tr.current);tr.current=setInterval(function(){fetchAll(true)},30000);return function(){if(tr.current)clearInterval(tr.current)}},[connected,fetchAll]);
 
-var rawData=useMemo(function(){if(selPerson==="ALL"){var c=[];Object.keys(allData).forEach(function(k){allData[k].forEach(function(x){c.push(x)})});return c.length>0?c:FD}var pd=allData[selPerson];return(pd&&pd.length>0)?pd:FD},[allData,selPerson]);
+/* ===== BUG FIX: rawData fallback ===== */
+/* Previously: when a specific person was selected but their live data hadn't loaded,
+   it fell back to FD (the ENTIRE default dataset of ALL persons' clients).
+   This caused wrong data to appear under individual person filters.
+   
+   Fix: When a specific person is selected, only fall back to FD entries 
+   that DON'T have a _person field (i.e. default data), but ONLY when 
+   viewing "ALL". For individual persons, return empty array if no live data. */
+var rawData=useMemo(function(){
+if(selPerson==="ALL"){
+var c=[];
+Object.keys(allData).forEach(function(k){allData[k].forEach(function(x){c.push(x)})});
+return c.length>0?c:FD;
+}
+var pd=allData[selPerson];
+/* FIX: Return empty array instead of FD when person-specific data is unavailable */
+return(pd&&pd.length>0)?pd:[];
+},[allData,selPerson]);
+
 var processed=useMemo(function(){return rawData.map(function(c){var wd=gWD(c,wk.d);var st="on_track";if(wd.att===0)st="no_calls";else if(!wd.met)st="behind";return Object.assign({},c,{wd:wd,st:st})})},[rawData,selWeek]);
 var wkCalls=useMemo(function(){var t=0;rawData.forEach(function(c){wk.d.forEach(function(d){if(c.calls[d]==="YES")t++})});return t},[rawData,selWeek]);
 var dayCalls=useMemo(function(){if(!selDay)return 0;var a=0;rawData.forEach(function(c){if(c.calls[selDay]==="YES")a++});return a},[rawData,selDay]);
