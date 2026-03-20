@@ -11,6 +11,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#dce5ec;color:#1a2332
 input,select,button{font-family:inherit;-webkit-tap-highlight-color:transparent;font-weight:600}
 button{transition:all .18s;cursor:pointer}button:active{transform:scale(.97)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .num{font-family:'Poppins',sans-serif;font-weight:700;letter-spacing:-.02em}
 table{font-family:inherit;border-collapse:collapse}td,th{border:none}
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:#c5cad3;border-radius:4px}
@@ -142,52 +143,51 @@ var _clf=useState("ALL");var callF=_clf[0],setCallF=_clf[1];
 var _rf=useState("ALL");var respF=_rf[0],setRespF=_rf[1];
 var _st=useState("");var search=_st[0],setSearch=_st[1];
 var _sb=useState("outstanding");var sortBy=_sb[0],setSortBy=_sb[1];
-var _dbg=useState({});var debugInfo=_dbg[0],setDebugInfo=_dbg[1];
-var _showDbg=useState(true);var showDebug=_showDbg[0],setShowDebug=_showDbg[1];
 var wk=WEEKS[selWeek];
 var goToday=function(){setSelWeek(_tw);setSelDay(_td)};
 var isToday=selWeek===_tw&&selDay===_td;
 
+var _ref=useState(false);var refreshing=_ref[0],setRefreshing=_ref[1];
+
 var fetchOne=useCallback(function(person){
-function viaFetch(){
-return fetch(person.url+"?_t="+Date.now(),{redirect:"follow"})
-.then(function(r){return r.json()})
-.then(function(r){
-if(r&&r.success&&r.data){
-console.log("[FETCH OK] "+person.name+": "+r.data.length+" clients");
-/* Store raw debug info */
-if(r.data.length>0){
-var r0=r.data[0];
-var allKeys=Object.keys(r0);
-setDebugInfo(function(prev){var n=Object.assign({},prev);n[person.name]={keys:allKeys,raw:JSON.parse(JSON.stringify(r0)),count:r.data.length};return n});
-console.log("[RAW KEYS] "+person.name+": "+allKeys.join(", "));
-console.log("[RAW FIRST RECORD] "+person.name+": "+JSON.stringify(r0));
-}
-return r.data.map(function(c){return normClient(Object.assign({},c,{_person:person.name}))});
-}
-console.warn("[FETCH] "+person.name+": response not valid",r);return[];
-}).catch(function(e){console.warn("[FETCH FAIL] "+person.name+": "+e.message);return null});
-}
+/* JSONP is the most reliable method for Google Apps Script cross-origin */
 function viaJSONP(){
 return new Promise(function(resolve){
 try{var cb="_cb_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
 var u=person.url+(person.url.indexOf("?")>=0?"&":"?")+"callback="+cb+"&_t="+Date.now();
-var tm=setTimeout(function(){done();console.warn("[JSONP TIMEOUT] "+person.name);resolve([])},10000);
+var tm=setTimeout(function(){done();console.warn("[JSONP TIMEOUT] "+person.name);resolve([])},15000);
 function done(){clearTimeout(tm);delete window[cb];try{var el=document.getElementById(cb);if(el)el.parentNode.removeChild(el)}catch(x){}}
 window[cb]=function(r){done();if(r&&r.success&&r.data){console.log("[JSONP OK] "+person.name+": "+r.data.length+" clients");resolve(r.data.map(function(c){return normClient(Object.assign({},c,{_person:person.name}))}))}else{console.warn("[JSONP] "+person.name+": response not valid");resolve([])}};
 var sc=document.createElement("script");sc.id=cb;sc.src=u;sc.onerror=function(){done();console.warn("[JSONP ERR] "+person.name);resolve([])};document.head.appendChild(sc);
 }catch(x){resolve([])}
 });
 }
+
+function viaFetch(){
+/* fetch with a 5-second abort timeout — if it doesn't resolve quickly, skip to JSONP */
+var controller;var signal;
+try{controller=new AbortController();signal=controller.signal}catch(x){return Promise.resolve(null)}
+var timeout=setTimeout(function(){controller.abort()},5000);
+return fetch(person.url+"?_t="+Date.now(),{redirect:"follow",signal:signal})
+.then(function(r){clearTimeout(timeout);return r.json()})
+.then(function(r){
+if(r&&r.success&&r.data){
+console.log("[FETCH OK] "+person.name+": "+r.data.length+" clients");
+return r.data.map(function(c){return normClient(Object.assign({},c,{_person:person.name}))});
+}
+return null;
+}).catch(function(e){clearTimeout(timeout);console.log("[FETCH SKIP] "+person.name+": "+e.message);return null});
+}
+
+/* Try fetch first (fast if CORS works), then JSONP as reliable fallback */
 return viaFetch().then(function(result){
 if(result&&result.length>0)return result;
-console.log("[FALLBACK] "+person.name+": trying JSONP...");
 return viaJSONP();
 });
 },[]);
 
 var fetchAll=useCallback(function(silent){
-if(!silent)setLoading(true);
+if(!silent){setLoading(true);setRefreshing(true)}
 console.log("[SYNC] Starting data fetch for "+PERSONS.length+" persons...");
 var start=Date.now();
 var pending=PERSONS.length;
@@ -199,18 +199,12 @@ if(data.length>0){
 anySuccess=true;
 setAllData(function(prev){var next=Object.assign({},prev);next[p.name]=data;return next});
 setConnected(true);setLastSync(new Date());setFetchTime(Date.now()-start);
-/* Debug: log sample client with calls and outstanding */
-var sample=data.find(function(c){return Object.keys(c.calls).length>0})||data[0];
-if(sample)console.log("[DATA CHECK] "+p.name+" | "+sample.name+" | outstanding="+sample.outstanding+" | calls="+JSON.stringify(sample.calls));
-/* Debug: total outstanding for this person */
-var totOut=0;data.forEach(function(c){totOut+=Math.max(0,c.outstanding)});
-console.log("[OUTSTANDING] "+p.name+": total="+totOut+" across "+data.length+" clients");
 }else{
 console.warn("[SYNC] "+p.name+": no data returned");
 }
 if(pending===0){
-if(!silent)setLoading(false);
-if(!anySuccess)console.error("[SYNC] ALL fetches failed - showing fallback data");
+if(!silent){setLoading(false);setRefreshing(false)}
+if(!anySuccess)console.error("[SYNC] ALL fetches failed");
 else console.log("[SYNC] Complete in "+(Date.now()-start)+"ms");
 }
 })
@@ -386,7 +380,7 @@ return <div style={{background:"#dce5ec",minHeight:"100vh",maxWidth:1600,margin:
 <div style={{display:"flex",gap:6,alignItems:"center"}}>
 {!isToday&&<button onClick={goToday} style={{background:"rgba(255,255,255,.2)",border:"1.5px solid rgba(255,255,255,.35)",borderRadius:8,padding:"5px 10px",display:"flex",alignItems:"center",gap:4}}><Ic type="today" size={12}/><span style={{color:"#fff",fontSize:11,fontWeight:800}}>Today</span></button>}
 <div style={{display:"flex",alignItems:"center",gap:5,background:connected?"rgba(39,174,96,.3)":"rgba(255,255,255,.15)",border:connected?"1.5px solid rgba(39,174,96,.6)":"1.5px solid rgba(255,255,255,.3)",borderRadius:8,padding:"5px 10px"}}><span style={{width:8,height:8,borderRadius:"50%",background:connected?"#2ecc71":loading?"#f7c948":"#95a5a6",animation:connected?"pulse 2s infinite":loading?"pulse 1s infinite":"none"}}/><span style={{color:"#fff",fontSize:11,fontWeight:800}}>{connected?"LIVE":loading?"SYNCING...":"OFFLINE"}</span></div>
-<button onClick={function(){fetchAll(false)}} style={{background:"rgba(255,255,255,.15)",border:"1.5px solid rgba(255,255,255,.3)",borderRadius:8,padding:"5px 10px",display:"flex",alignItems:"center",gap:4}}><Ic type="refresh" size={13}/><span style={{color:"#fff",fontSize:11,fontWeight:800}}>Refresh</span></button>
+<button onClick={function(){if(!refreshing)fetchAll(false)}} style={{background:refreshing?"rgba(247,201,72,.3)":"rgba(255,255,255,.15)",border:refreshing?"1.5px solid rgba(247,201,72,.6)":"1.5px solid rgba(255,255,255,.3)",borderRadius:8,padding:"5px 10px",display:"flex",alignItems:"center",gap:4,opacity:refreshing?.7:1}}><span style={{display:"inline-flex",animation:refreshing?"spin .8s linear infinite":"none"}}><Ic type="refresh" size={13}/></span><span style={{color:"#fff",fontSize:11,fontWeight:800}}>{refreshing?"Syncing...":"Refresh"}</span></button>
 </div></div>
 <div style={{background:"rgba(255,255,255,.1)",borderRadius:8,padding:"6px 12px",marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{display:"flex",alignItems:"center",gap:6}}><Ic type="calendar" size={13} color="#f7c948"/><span style={{color:"#fff",fontSize:13,fontWeight:800}}>{isToday?"Today":"Viewing"}: {selDay>0?"March "+selDay+", 2026":wk.f}</span></div>{isToday&&<span style={{background:"#f7c948",color:"#1b5b66",fontSize:10,fontWeight:900,padding:"3px 10px",borderRadius:10}}>LIVE</span>}</div>
 <div style={{marginBottom:10}}><div style={{fontSize:11,color:"rgba(255,255,255,.7)",fontWeight:700,marginBottom:6,textTransform:"uppercase",letterSpacing:".1em"}}>Team Members</div>
@@ -424,44 +418,6 @@ return <div style={{background:"#dce5ec",minHeight:"100vh",maxWidth:1600,margin:
 <div style={{padding:"6px "+ps+" 8px",fontSize:12,color:"#7a8fa0",fontWeight:700}}>Showing {filtered.length} of {processed.length} clients{selPerson!=="ALL"&&<span style={{marginLeft:6,color:"#3c8d99"}}>| {selPerson}</span>}</div>
 
 <div style={{padding:"0 "+ps+" 50px"}}><div style={{background:"#fff",borderRadius:14,border:"1px solid #b8c9d4",overflow:"hidden"}}><div style={{overflowX:"auto"}}><table style={{width:"100%",fontSize:12.5,fontWeight:600}}><thead><tr style={{background:"#1b5b66"}}><th style={{padding:"12px 10px",color:"#fff",fontWeight:800,fontSize:11,textAlign:"left",whiteSpace:"nowrap",position:"sticky",left:0,background:"#1b5b66",zIndex:2}}>Client Name</th>{selPerson==="ALL"&&<th style={{padding:"12px 8px",color:"#fff",fontWeight:800,fontSize:11,textAlign:"center"}}>Person</th>}<th style={{padding:"12px 8px",color:"#fff",fontWeight:800,fontSize:11,textAlign:"center"}}>Category</th><th style={{padding:"12px 8px",color:"#fff",fontWeight:800,fontSize:11,textAlign:"right"}}>Outstanding</th><th style={{padding:"12px 8px",color:"#fff",fontWeight:800,fontSize:11,textAlign:"center"}}>Overdue</th><th style={{padding:"12px 8px",color:"#fff",fontWeight:800,fontSize:11,textAlign:"center"}}>Frequency</th><th style={{padding:"12px 8px",color:"#fff",fontWeight:800,fontSize:11,textAlign:"center"}}>Calls</th><th style={{padding:"12px 8px",color:"#fff",fontWeight:800,fontSize:11,textAlign:"center"}}>Status</th>{wk.d.map(function(d){return <th key={d} style={{padding:"12px 6px",color:SUN.indexOf(d)>=0?"#f8bbd0":"#fff",fontWeight:800,fontSize:11,textAlign:"center",minWidth:28,background:SUN.indexOf(d)>=0?"#153d45":"#1b5b66"}}>{d}</th>})}</tr></thead><tbody>{filtered.map(function(cl,i){var wd=cl.wd;var wa=cl.wdActive;var bc=cl.st==="no_calls"?"#e8175d":cl.st==="behind"?"#e67e22":"#27ae60";return <tr key={i} style={{background:i%2===0?"#f8fafb":"#fff"}}><td style={{padding:"10px 10px",fontWeight:700,color:"#0f1a2a",whiteSpace:"nowrap",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",borderLeft:"3px solid "+bc,position:"sticky",left:0,background:"inherit",zIndex:1}}>{cl.name}</td>{selPerson==="ALL"&&<td style={{padding:"10px 8px",textAlign:"center"}}>{cl._person&&<span style={{padding:"2px 8px",borderRadius:10,fontSize:10,fontWeight:700,background:(PERSONS.find(function(p){return p.name===cl._person})||{color:"#546e7a"}).color,color:"#fff"}}>{cl._person}</span>}</td>}<td style={{padding:"10px 8px",textAlign:"center"}}><CP v={cl.category}/></td><td style={{padding:"10px 8px",textAlign:"right"}}><span className="num" style={{fontSize:13,fontWeight:700,color:cl.outstanding>50000?"#e8175d":"#1a2332"}}>{fmt(cl.outstanding)}</span></td><td style={{padding:"10px 8px",textAlign:"center"}}><DP v={cl.outstandingDays}/></td><td style={{padding:"10px 8px",textAlign:"center"}}><FP v={cl.frequency}/></td><td style={{padding:"10px 8px",textAlign:"center"}}><span className="num" style={{fontSize:13}}><span style={{color:"#27ae60"}}>{wa.yes}</span><span style={{color:"#ccc"}}>/</span><span style={{color:"#1a2332"}}>{wa.req}</span></span></td><td style={{padding:"10px 8px",textAlign:"center"}}><SB met={wa.met} short={wa.short} att={wa.att}/></td>{wk.d.map(function(d){var v=cl.calls[d];var bg=v==="YES"?"#c8e6c9":v==="NO"?"#ffcdd2":SUN.indexOf(d)>=0?"#f3f3f3":"#fafafa";var co=v==="YES"?"#1b5e20":v==="NO"?"#b71c1c":"#ddd";return <td key={d} style={{padding:"6px 4px",textAlign:"center",fontSize:13,fontWeight:800,color:co,background:bg,minWidth:28}}>{v==="YES"?"\u2713":v==="NO"?"\u2717":"\u2022"}</td>})}</tr>})}</tbody></table></div>{filtered.length===0&&<div style={{padding:40,textAlign:"center",color:"#90a4ae"}}>{isSunday?"Sunday \u2014 No calls scheduled":loading?"Loading data from Google Sheets...":rawData.length===0?(connected?"No data available for "+(selPerson==="ALL"?"any team member":selPerson):"Connecting to Google Sheets... Please wait."):"No clients match filters"}</div>}</div></div>
-
-{/* ===== DEBUG PANEL — shows raw API response from each sheet ===== */}
-<div style={{margin:"20px "+ps,padding:16,borderRadius:14,background:"#1a2332",border:"2px solid #e8175d"}}>
-<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:showDebug?12:0}}>
-<div style={{fontSize:14,fontWeight:800,color:"#f7c948",textTransform:"uppercase"}}>DEBUG: Raw API Data from Each Sheet</div>
-<button onClick={function(){setShowDebug(!showDebug)}} style={{padding:"4px 12px",borderRadius:8,border:"1px solid #f7c948",background:"transparent",color:"#f7c948",fontSize:11,fontWeight:800}}>{showDebug?"HIDE":"SHOW"}</button>
-</div>
-{showDebug&&<div>
-{Object.keys(debugInfo).length===0&&<div style={{color:"#90a4ae",fontSize:12,padding:10}}>Waiting for API responses...</div>}
-{PERSONS.map(function(p){
-var di=debugInfo[p.name];
-if(!di)return <div key={p.name} style={{padding:8,marginBottom:8,borderRadius:8,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)"}}><span style={{color:p.color,fontWeight:800,fontSize:13}}>{p.name}</span><span style={{color:"#e8175d",marginLeft:10,fontSize:11}}>No data received yet</span></div>;
-var raw=di.raw;
-/* Check which outstanding fields exist */
-var outFields=["outstanding","Outstanding","Current Outstanding","CurrentOutstanding","outstanding_amount","Outstanding Amount","amount","Amount"];
-var foundOut=[];
-outFields.forEach(function(f){if(raw[f]!==undefined)foundOut.push(f+"="+JSON.stringify(raw[f]))});
-/* Also check all keys */
-var allOutKeys=[];
-Object.keys(raw).forEach(function(k){var lk=k.toLowerCase();if(lk.indexOf("outstanding")>=0||lk.indexOf("amount")>=0)allOutKeys.push(k+"="+JSON.stringify(raw[k]))});
-/* Compute totals after normalization */
-var normData=allData[p.name]||[];
-var totOut=0;normData.forEach(function(c){totOut+=Math.max(0,c.outstanding)});
-
-return <div key={p.name} style={{padding:10,marginBottom:8,borderRadius:8,background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)"}}>
-<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-<span style={{color:p.color,fontWeight:800,fontSize:14}}>{p.name}</span>
-<span style={{color:"#27ae60",fontSize:11,fontWeight:700}}>{di.count} clients loaded</span>
-</div>
-<div style={{fontSize:11,color:"#ccc",marginBottom:4}}><strong style={{color:"#f7c948"}}>All Keys:</strong> {di.keys.join(", ")}</div>
-<div style={{fontSize:11,color:"#ccc",marginBottom:4}}><strong style={{color:"#f7c948"}}>Outstanding Fields Found:</strong> {foundOut.length>0?foundOut.join(" | "):<span style={{color:"#e8175d"}}>NONE FOUND!</span>}</div>
-<div style={{fontSize:11,color:"#ccc",marginBottom:4}}><strong style={{color:"#f7c948"}}>All Keys with "outstanding" or "amount":</strong> {allOutKeys.length>0?allOutKeys.join(" | "):<span style={{color:"#e8175d"}}>NONE!</span>}</div>
-<div style={{fontSize:11,color:"#ccc",marginBottom:4}}><strong style={{color:"#f7c948"}}>After Normalization Total Outstanding:</strong> <span style={{color:totOut>0?"#27ae60":"#e8175d",fontWeight:800,fontSize:13}}>{fmt(totOut)}</span></div>
-<details style={{fontSize:10,color:"#888"}}><summary style={{cursor:"pointer",color:"#f7c948"}}>Full raw first record</summary><pre style={{color:"#aaa",overflow:"auto",maxHeight:120,fontSize:9,marginTop:4}}>{JSON.stringify(raw,null,2)}</pre></details>
-</div>})}
-<div style={{marginTop:8,fontSize:10,color:"#90a4ae"}}>This panel shows what each Google Sheet API returns. If "Outstanding Fields Found" says NONE, the Apps Script needs to be updated. Share a screenshot of this panel so I can fix the mapping.</div>
-</div>}
-</div>
 
 </div>
 }
