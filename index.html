@@ -83,17 +83,17 @@ table{font-family:inherit;border-collapse:collapse}td,th{border:none}
 .cat-btn{padding:6px 14px;border-radius:20px;border:none;font-size:12px;font-weight:700;transition:all .15s}
 .cat-btn:hover{transform:translateY(-1px)}
 
-.loc-slicer{display:inline-flex;gap:4px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:3px;margin-left:12px}
-.loc-slicer-btn{padding:5px 14px;border-radius:8px;border:none;font-size:11px;font-weight:700;background:transparent;color:#6b7280;transition:all .15s}
-.loc-slicer-btn:hover{background:#fef2f2;color:#f43f5e}
-.loc-slicer-btn.active{background:#f43f5e;color:#fff}
-
 @media(max-width:768px){
 .container{flex-direction:column}
 .sidebar{width:100%;max-height:none;overflow:visible}
 .main{padding:16px}
 .card-grid{grid-template-columns:1fr 1fr !important}
 }
+
+.loc-slicer{display:flex;gap:6px;margin-top:8px;margin-bottom:16px}
+.loc-slicer-btn{padding:7px 18px;border-radius:20px;border:1.5px solid #e5e7eb;font-size:12px;font-weight:700;background:#fff;color:#6b7280;transition:all .15s}
+.loc-slicer-btn:hover{border-color:#f43f5e;color:#f43f5e;background:#fef2f2}
+.loc-slicer-btn.active{background:#f43f5e;color:#fff;border-color:#f43f5e;box-shadow:0 2px 8px rgba(244,63,94,.25)}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -172,19 +172,9 @@ var fetchAll=useCallback(function(silent){if(!silent){setLoading(true);setRefres
 useEffect(function(){fetchAll(false)},[]);
 useEffect(function(){if(!connected)return;if(tr.current)clearInterval(tr.current);tr.current=setInterval(function(){fetchAll(true)},30000);return function(){if(tr.current)clearInterval(tr.current)}},[connected,fetchAll]);
 
-var rawData=useMemo(function(){
-if(selPerson==="ALL"){var c=[];Object.keys(allData).forEach(function(k){allData[k].forEach(function(x){c.push(x)})});return c}
-var pd=allData[selPerson];
-if(!pd||pd.length===0)return[];
-if(selPerson==="Jaya"&&jayaSheet!=="ALL"){return pd.filter(function(x){return x._sheetSource===jayaSheet})}
-return pd;
-},[allData,selPerson,jayaSheet]);
+var rawData=useMemo(function(){if(selPerson==="ALL"){var c=[];Object.keys(allData).forEach(function(k){allData[k].forEach(function(x){c.push(x)})});return c}var pd=allData[selPerson];if(!pd||pd.length===0)return[];if(selPerson==="Jaya"&&jayaSheet!=="ALL"){return pd.filter(function(x){return x._sheetSource===jayaSheet})}return pd},[allData,selPerson,jayaSheet]);
 
-var jayaCounts=useMemo(function(){
-var pd=allData["Jaya"]||[];var ho=0,bl=0;
-pd.forEach(function(x){if(x._sheetSource==="Bangalore")bl++;else ho++});
-return{total:pd.length,ho:ho,bl:bl}
-},[allData]);
+var jayaCounts=useMemo(function(){var pd=allData["Jaya"]||[];var ho=0,bl=0;pd.forEach(function(x){if(x._sheetSource==="Bangalore")bl++;else ho++});return{total:pd.length,ho:ho,bl:bl}},[allData]);
 
 var isSunday=selDay>0&&SUN.indexOf(selDay)>=0;
 var processed=useMemo(function(){return rawData.map(function(c){var wdWeek=gWD(c,wk.d);var wdActive;if(selDay>0){var v=c.calls[selDay];var y=v==="YES"?1:0;var n=v==="NO"?1:0;var att=y+n;wdActive={req:1,yes:y,no:n,att:att,met:y>=1,short:Math.max(0,1-y)}}else{wdActive=wdWeek}var st="on_track";if(wdActive.att===0)st="no_calls";else if(!wdActive.met)st="behind";var dayVal=selDay>0?(c.calls[selDay]||null):null;return Object.assign({},c,{wd:wdWeek,wdActive:wdActive,st:st,dayVal:dayVal})})},[rawData,selWeek,selDay]);
@@ -203,21 +193,20 @@ var pct=tgtC>0?Math.round(called/tgtC*100):0;
 
 return <div className="container">
 
-{/* ===== SIDEBAR ===== */}
 <div className="sidebar">
 <div className="sb-header">
-<div className="sb-logo">{"\uD83D\uDCCA"} Call Tracker</div>
+<div className="sb-logo">📊 Call Tracker</div>
 <div className="sb-sub">Collection Dashboard v3.0</div>
 </div>
 
 <div className="sb-section">
 <div className="sb-label">Team Members</div>
 <button className={"sb-btn"+(selPerson==="ALL"?" active":"")} onClick={function(){setSelPerson("ALL");setJayaSheet("ALL")}}>
-<span className="sb-icon">{"\uD83D\uDC65"}</span>All Team
+<span className="sb-icon">👥</span>All Team
 <span className="sb-count">{rawData.length||"..."}</span>
 </button>
 {PERSONS.map(function(p){var ct=(allData[p.name]||[]).length;var ac=selPerson===p.name;return <button key={p.name} className={"sb-btn"+(ac?" active":"")} onClick={function(){if(ac){setSelPerson("ALL");setJayaSheet("ALL")}else{setSelPerson(p.name);if(p.name!=="Jaya")setJayaSheet("ALL")}}} style={ac?{background:"linear-gradient(135deg,"+p.color+","+p.color+"cc)"}:{}}>
-<span className="sb-icon" style={{color:ac?"#fff":p.color}}>{"\u25CF"}</span>{p.name}
+<span className="sb-icon" style={{color:ac?"#fff":p.color}}>●</span>{p.name}
 <span className="sb-count">{ct||"..."}</span>
 </button>})}
 </div>
@@ -239,9 +228,9 @@ return <div className="container">
 
 <div className="sb-divider"/>
 <div className="sb-section">
-{!isToday&&<button className="sb-btn" onClick={goToday} style={{background:"rgba(102,126,234,.15)",color:"#a5b4fc",border:"none"}}><span className="sb-icon">{"\uD83D\uDCC5"}</span>Go to Today</button>}
+{!isToday&&<button className="sb-btn" onClick={goToday} style={{background:"rgba(102,126,234,.15)",color:"#a5b4fc",border:"none"}}><span className="sb-icon">📅</span>Go to Today</button>}
 <button className="sb-btn" onClick={function(){if(!refreshing)fetchAll(false)}} style={{background:refreshing?"rgba(102,126,234,.2)":"rgba(255,255,255,.04)"}}>
-<span className="sb-icon" style={{display:"inline-flex",animation:refreshing?"spin .8s linear infinite":"none"}}>{"\uD83D\uDD04"}</span>{refreshing?"Syncing...":"Refresh Data"}
+<span className="sb-icon" style={{display:"inline-flex",animation:refreshing?"spin .8s linear infinite":"none"}}>🔄</span>{refreshing?"Syncing...":"Refresh Data"}
 </button>
 </div>
 
@@ -253,21 +242,17 @@ return <div className="container">
 </div>
 </div>
 
-{/* ===== MAIN CONTENT ===== */}
 <div className="main">
 <div className="section-hdr">
-<h1 style={{display:"flex",alignItems:"center",flexWrap:"wrap"}}>
-{selPerson==="ALL"?"Dashboard Overview":selPerson+"'s Dashboard"}
-{selPerson==="Jaya"&&<span className="loc-slicer">
+<h1>{selPerson==="ALL"?"Dashboard Overview":selPerson+"'s Dashboard"}</h1>
+{selPerson==="Jaya"&&<div className="loc-slicer">
 <button className={"loc-slicer-btn"+(jayaSheet==="ALL"?" active":"")} onClick={function(){setJayaSheet("ALL")}}>All ({jayaCounts.total})</button>
 <button className={"loc-slicer-btn"+(jayaSheet==="HeadOffice"?" active":"")} onClick={function(){setJayaSheet("HeadOffice")}}>Head Office ({jayaCounts.ho})</button>
 <button className={"loc-slicer-btn"+(jayaSheet==="Bangalore"?" active":"")} onClick={function(){setJayaSheet("Bangalore")}}>Bangalore ({jayaCounts.bl})</button>
-</span>}
-</h1>
-<p>{selDay>0?"March "+selDay+", 2026":(isToday?"Today \u2014 ":"")+wk.f+", March 2026"}{isSunday?" (Sunday \u2014 No calls)":""}{selPerson==="Jaya"&&jayaSheet!=="ALL"?" \u00B7 "+(jayaSheet==="Bangalore"?"Bangalore":"Head Office")+" sheet":""}</p>
+</div>}
+<p>{selDay>0?"March "+selDay+", 2026":(isToday?"Today — ":"")+wk.f+", March 2026"}{isSunday?" (Sunday — No calls)":""}</p>
 </div>
 
-{/* KPI Cards */}
 <div className="card-grid" style={{gridTemplateColumns:"repeat(5,1fr)"}}>
 <div className="kcard" style={{borderTop:"4px solid "+scoreColor}}><div className="kcard-label">Score</div><div className="kcard-val num" style={{color:scoreColor}}>{teamScore}%</div><div className="kcard-sub" style={{color:"#6b7280"}}>{stats.ans} answered of {tgtC}</div></div>
 <div className="kcard" style={{borderTop:"4px solid #dc2626"}}><div className="kcard-label">Total Outstanding</div><div className="kcard-val num">{fmtS(stats.to)}</div><div className="kcard-sub" style={{color:"#dc2626"}}>All clients</div></div>
@@ -276,13 +261,11 @@ return <div className="container">
 <div className="kcard" onClick={function(){setCallF(callF==="UNCALLED"?"ALL":"UNCALLED")}} style={{borderTop:"4px solid #f59e0b",cursor:"pointer",outline:callF==="UNCALLED"?"2px solid #f59e0b":"none"}}><div className="kcard-label">Pending</div><div className="kcard-val num" style={{color:"#f59e0b"}}>{Math.max(0,tgtC-called)}</div><div className="kcard-sub" style={{color:"#6b7280"}}>{called} of {tgtC} done</div></div>
 </div>
 
-{/* Answered / Not Answered */}
 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
-<button onClick={function(){setRespF(respF==="YES"?"ALL":"YES")}} style={{padding:"16px 20px",borderRadius:14,border:respF==="YES"?"2px solid #16a34a":"1px solid #d1fae5",background:respF==="YES"?"#f0fdf4":"#fff",display:"flex",alignItems:"center",gap:14}}><div style={{width:44,height:44,borderRadius:12,background:"#16a34a",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,flexShrink:0}}>{"\u2713"}</div><div style={{textAlign:"left"}}><div className="num" style={{fontSize:28,color:"#16a34a",lineHeight:1}}>{stats.ans}</div><div style={{fontSize:13,fontWeight:600,color:"#15803d",marginTop:3}}>Answered</div></div></button>
-<button onClick={function(){setRespF(respF==="NO"?"ALL":"NO")}} style={{padding:"16px 20px",borderRadius:14,border:respF==="NO"?"2px solid #dc2626":"1px solid #fecaca",background:respF==="NO"?"#fef2f2":"#fff",display:"flex",alignItems:"center",gap:14}}><div style={{width:44,height:44,borderRadius:12,background:"#dc2626",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,flexShrink:0}}>{"\u2717"}</div><div style={{textAlign:"left"}}><div className="num" style={{fontSize:28,color:"#dc2626",lineHeight:1}}>{stats.una}</div><div style={{fontSize:13,fontWeight:600,color:"#991b1b",marginTop:3}}>Not Answered</div></div></button>
+<button onClick={function(){setRespF(respF==="YES"?"ALL":"YES")}} style={{padding:"16px 20px",borderRadius:14,border:respF==="YES"?"2px solid #16a34a":"1px solid #d1fae5",background:respF==="YES"?"#f0fdf4":"#fff",display:"flex",alignItems:"center",gap:14}}><div style={{width:44,height:44,borderRadius:12,background:"#16a34a",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,flexShrink:0}}>✓</div><div style={{textAlign:"left"}}><div className="num" style={{fontSize:28,color:"#16a34a",lineHeight:1}}>{stats.ans}</div><div style={{fontSize:13,fontWeight:600,color:"#15803d",marginTop:3}}>Answered</div></div></button>
+<button onClick={function(){setRespF(respF==="NO"?"ALL":"NO")}} style={{padding:"16px 20px",borderRadius:14,border:respF==="NO"?"2px solid #dc2626":"1px solid #fecaca",background:respF==="NO"?"#fef2f2":"#fff",display:"flex",alignItems:"center",gap:14}}><div style={{width:44,height:44,borderRadius:12,background:"#dc2626",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,flexShrink:0}}>✗</div><div style={{textAlign:"left"}}><div className="num" style={{fontSize:28,color:"#dc2626",lineHeight:1}}>{stats.una}</div><div style={{fontSize:13,fontWeight:600,color:"#991b1b",marginTop:3}}>Not Answered</div></div></button>
 </div>
 
-{/* Progress */}
 <div className="card-white">
 <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
 <span style={{fontSize:13,color:"#6b7280",fontWeight:600}}>{selDay>0?"March "+selDay:wk.f}{isToday?" (Today)":""}</span>
@@ -291,12 +274,10 @@ return <div className="container">
 <div className="progress-bar"><div className="progress-fill" style={{width:Math.min(100,pct)+"%",background:pct>=100?"#16a34a":"linear-gradient(90deg,#667eea,#764ba2)"}}/></div>
 </div>
 
-{/* Status Buttons */}
 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:20}}>
 {[{l:"On Track",v:stats.onTrack,c:"#16a34a",f:"on_track"},{l:"Behind",v:stats.behind,c:"#d97706",f:"behind"},{l:"No Calls",v:stats.noCalls,c:"#dc2626",f:"no_calls"}].map(function(s){return <button key={s.l} className={"stat-btn"+(statF===s.f?" active":"")} onClick={function(){setStatF(statF===s.f?"ALL":s.f)}}><span className="num" style={{fontSize:28,color:s.c,lineHeight:1}}>{s.v}</span><span style={{fontSize:12,fontWeight:700,color:s.c}}>{s.l}</span></button>})}
 </div>
 
-{/* Outstanding Breakdown */}
 <div className="card-white">
 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:20}}>
 <div><div style={{fontSize:10,color:"#6b7280",fontWeight:700,textTransform:"uppercase",letterSpacing:.5}}>Total Outstanding</div><div className="num" style={{fontSize:20,color:"#1a1f36",marginTop:4}}>{fmt(stats.to)}</div></div>
@@ -306,9 +287,8 @@ return <div className="container">
 <div className="progress-bar" style={{marginTop:12}}><div className="progress-fill" style={{width:stats.to>0?Math.max(3,Math.round(stats.calledOut/stats.to*100))+"%":"0%",background:"#16a34a"}}/></div>
 </div>
 
-{/* Scorecard */}
 <div className="tbl-wrap" style={{marginBottom:24}}>
-<div className="tbl-hdr"><h3>{(selPerson==="ALL"?"Team Scorecard":selPerson+"'s Scorecard")+" \u2014 "+(selDay>0?"March "+selDay:wk.f)}</h3></div>
+<div className="tbl-hdr"><h3>{(selPerson==="ALL"?"Team Scorecard":selPerson+"'s Scorecard")+" — "+(selDay>0?"March "+selDay:wk.f)}</h3></div>
 <div className="tbl-scroll"><table className="tbl">
 <thead><tr>{["Person","Clients","Target","Called","Answered","On Track","Call %","Coverage","Score","Flags"].map(function(h){return <th key={h} style={{textAlign:h==="Person"||h==="Flags"?"left":"center"}}>{h}</th>})}</tr></thead>
 <tbody>{scores.filter(function(p){return selPerson==="ALL"||p.name===selPerson}).map(function(p,i){var sb=p.sc>=70?"#f0fdf4":p.sc>=40?"#fffbeb":"#fef2f2";var scc=p.sc>=70?"#16a34a":p.sc>=40?"#d97706":"#dc2626";return <tr key={p.name}>
@@ -323,19 +303,17 @@ return <div className="container">
 <td style={{textAlign:"center"}}><span className="num pill" style={{background:sb,color:scc,fontSize:14,padding:"4px 14px"}}>{p.sc}%</span></td>
 <td style={{fontSize:11}}>{p.fl.length===0?<span style={{color:"#16a34a",fontWeight:600}}>No issues</span>:p.fl.map(function(f,j){return <div key={j} style={{color:"#dc2626",fontWeight:600}}>{"\u2022 "+f}</div>})}</td>
 </tr>})}</tbody></table></div>
-<div style={{padding:"10px 24px",fontSize:11,color:"#9ca3af",borderTop:"1px solid #f3f4f6"}}>Score = Answered / Target x 100. Target: Nitasha and Surya=40/day, Disha=50/day, Jaya=60/day.</div>
+<div style={{padding:"10px 24px",fontSize:11,color:"#9ca3af",borderTop:"1px solid #f3f4f6"}}>Score = Answered / Target × 100. Target: Nitasha & Surya=40/day, Disha=50/day, Jaya=60/day.</div>
 </div>
 
-{/* Filters + Search */}
 <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginBottom:12}}>
-<div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:14,color:"#9ca3af"}}>{"\uD83D\uDD0D"}</span><input className="search-input" type="text" placeholder="Search client..." value={search} onChange={function(e){setSearch(e.target.value)}}/></div>
+<div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:14,color:"#9ca3af"}}>🔍</span><input className="search-input" type="text" placeholder="Search client..." value={search} onChange={function(e){setSearch(e.target.value)}}/></div>
 {["ALL","PLATINUM","GOLD","SILVER"].map(function(cat){var mp={ALL:{a:"#667eea",i:"#f3f4f6",t:"#6b7280"},PLATINUM:{a:"#7c3aed",i:"#f5f3ff",t:"#7c3aed"},GOLD:{a:"#d97706",i:"#fffbeb",t:"#d97706"},SILVER:{a:"#2563eb",i:"#eff6ff",t:"#2563eb"}};var s=mp[cat];var ac=catF===cat;return <button key={cat} className="cat-btn" onClick={function(){setCatF(cat)}} style={{background:ac?s.a:s.i,color:ac?"#fff":s.t}}>{cat}{cat!=="ALL"?" ("+(stats.cc[cat]||0)+")":""}</button>})}
 <select value={sortBy} onChange={function(e){setSortBy(e.target.value)}} style={{padding:"8px 12px",borderRadius:10,border:"1.5px solid #e5e7eb",background:"#fff",color:"#374151",fontSize:12,fontWeight:600}}><option value="outstanding">Sort: Amount</option><option value="shortfall">Sort: Shortfall</option><option value="name">Sort: Name</option></select>
 </div>
 
-<div style={{fontSize:12,color:"#9ca3af",fontWeight:600,marginBottom:8}}>Showing {filtered.length} of {processed.length} clients{selPerson!=="ALL"&&<span style={{color:"#667eea"}}> | {selPerson}</span>}{selPerson==="Jaya"&&jayaSheet!=="ALL"&&<span style={{color:"#f43f5e"}}> | {jayaSheet==="Bangalore"?"Bangalore":"Head Office"}</span>}</div>
+<div style={{fontSize:12,color:"#9ca3af",fontWeight:600,marginBottom:8}}>Showing {filtered.length} of {processed.length} clients{selPerson!=="ALL"&&<span style={{color:"#667eea"}}> | {selPerson}</span>}</div>
 
-{/* Client Table */}
 <div className="tbl-wrap">
 <div className="tbl-scroll"><table className="tbl">
 <thead><tr>
