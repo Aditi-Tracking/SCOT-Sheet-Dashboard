@@ -83,6 +83,9 @@ table{font-family:inherit;border-collapse:collapse}td,th{border:none}
 .cat-btn{padding:6px 14px;border-radius:20px;border:none;font-size:12px;font-weight:700;transition:all .15s}
 .cat-btn:hover{transform:translateY(-1px)}
 
+.slicer-btn{padding:6px 14px;border-radius:20px;border:2px solid transparent;font-size:12px;font-weight:700;transition:all .15s;margin-right:4px}
+.slicer-btn:hover{transform:translateY(-1px)}
+
 @media(max-width:768px){
 .container{flex-direction:column}
 .sidebar{width:100%;max-height:none;overflow:visible}
@@ -102,12 +105,20 @@ var useState=React.useState,useMemo=React.useMemo,useEffect=React.useEffect,useC
 var WEEKS=[{l:"W1",f:"Week 1 (1-7)",d:[1,2,3,4,5,6,7]},{l:"W2",f:"Week 2 (8-14)",d:[8,9,10,11,12,13,14]},{l:"W3",f:"Week 3 (15-21)",d:[15,16,17,18,19,20,21]},{l:"W4",f:"Week 4 (22-28)",d:[22,23,24,25,26,27,28]},{l:"W5",f:"Week 5 (29-31)",d:[29,30,31]}];
 var FM={"Once a Week":1,"Twice a Week":2,"Thrice a Week":3};
 var SUN=[1,8,15,22,29];var R="\u20B9";
+
+/* ===== PERSONS CONFIG ===== */
+/* Jaya has TWO sheets: "March Outstanding" (Head Office) and "Bangalore" */
+/* The Apps Script for Jaya accepts ?sheet=March%20Outstanding or ?sheet=Bangalore */
 var PERSONS=[
-{name:"Nitasha",url:"https://script.google.com/macros/s/AKfycbyzK-3QlwwM8hVB_L95KzeE7-74YkyMvQjzYQuSSNDfPmMUkwm1m172O_2skamz47c4/exec",color:"#8b5cf6",tgt:40},
-{name:"Surya",url:"https://script.google.com/macros/s/AKfycbxWRtR3Rj6H7nbjNNGWFwHJhPmGu8_AMjhrkNR5eIKbcuYAN8K7K7aE04sWbaXEhuOT/exec",color:"#3b82f6",tgt:40},
-{name:"Disha",url:"https://script.google.com/macros/s/AKfycbxGTaqdhHe0KhnkJXRXhB0Oah4EuQa3e58CJC0woj9KeEs9M1fEznBfNXSY5awbtNx8Bg/exec",color:"#06b6d4",tgt:50},
-{name:"Jaya",url:"https://script.google.com/macros/s/AKfycbw6WVSMzFgg-lK4QIBJCD8ymRMb8JjZi8toddj-kXV9T_mNQqQk9DwUCF34EvztLgGj8A/exec",color:"#f43f5e",tgt:60}
+{name:"Nitasha",url:"https://script.google.com/macros/s/AKfycbyzK-3QlwwM8hVB_L95KzeE7-74YkyMvQjzYQuSSNDfPmMUkwm1m172O_2skamz47c4/exec",color:"#8b5cf6",tgt:40,sheets:null},
+{name:"Surya",url:"https://script.google.com/macros/s/AKfycbxWRtR3Rj6H7nbjNNGWFwHJhPmGu8_AMjhrkNR5eIKbcuYAN8K7K7aE04sWbaXEhuOT/exec",color:"#3b82f6",tgt:40,sheets:null},
+{name:"Disha",url:"https://script.google.com/macros/s/AKfycbxGTaqdhHe0KhnkJXRXhB0Oah4EuQa3e58CJC0woj9KeEs9M1fEznBfNXSY5awbtNx8Bg/exec",color:"#06b6d4",tgt:50,sheets:null},
+{name:"Jaya",url:"https://script.google.com/macros/s/AKfycbw6WVSMzFgg-lK4QIBJCD8ymRMb8JjZi8toddj-kXV9T_mNQqQk9DwUCF34EvztLgGj8A/exec",color:"#f43f5e",tgt:60,sheets:[
+  {key:"HEADOFFICE",label:"Head Office",sheetName:"March Outstanding"},
+  {key:"BANGALORE",label:"Bangalore",sheetName:"Bangalore"}
+]}
 ];
+
 var _now=new Date();var _td=(_now.getMonth()===2)?_now.getDate():16;var _tw=_td<=7?0:_td<=14?1:_td<=21?2:_td<=28?3:4;
 var FD=[];
 function normClient(c){
@@ -117,12 +128,12 @@ if(Object.keys(nc).length===0){for(var rk in c){if(c.hasOwnProperty(rk)){var dn=
 var normKeys={};for(var nk in c){if(c.hasOwnProperty(nk)){normKeys[nk.replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim().toLowerCase()]=nk}}
 var out=0;var outNames=["outstanding amount","outstanding","current outstanding","amount"];
 for(var i=0;i<outNames.length;i++){var realKey=normKeys[outNames[i]];if(realKey!==undefined){var val=c[realKey];if(val!==undefined&&val!==null&&val!==""){var parsed=(typeof val==="number")?val:parseFloat(String(val).replace(/[^0-9.\-]/g,""));if(!isNaN(parsed)){out=parsed;break}}}}
-if(out===0){for(var key in c){if(c.hasOwnProperty(key)&&key!=="calls"&&key!=="_person"){var lk=key.replace(/[\r\n]+/g,' ').toLowerCase();if(lk.indexOf("outstanding")>=0||lk.indexOf("amount")>=0){var pv=(typeof c[key]==="number")?c[key]:parseFloat(String(c[key]).replace(/[^0-9.\-]/g,""));if(!isNaN(pv)&&pv!==0){out=pv;break}}}}}
+if(out===0){for(var key in c){if(c.hasOwnProperty(key)&&key!=="calls"&&key!=="_person"&&key!=="_source"){var lk=key.replace(/[\r\n]+/g,' ').toLowerCase();if(lk.indexOf("outstanding")>=0||lk.indexOf("amount")>=0){var pv=(typeof c[key]==="number")?c[key]:parseFloat(String(c[key]).replace(/[^0-9.\-]/g,""));if(!isNaN(pv)&&pv!==0){out=pv;break}}}}}
 var nm=String(c[normKeys["client name"]]||c[normKeys["name"]]||c.name||c.Name||"").trim();
 var cat=String(c[normKeys["category"]]||c.category||c.Category||"").replace(/[\r\n]+/g,' ').trim().toUpperCase();
 var od=String(c[normKeys["outstanding from(days)"]]||c[normKeys["outstanding from (days)"]]||c[normKeys["outstanding days"]]||c.outstandingDays||c.OutstandingDays||"").replace(/[\r\n]+/g,' ').trim();
 var freq=String(c[normKeys["frequency of calling"]]||c[normKeys["frequency"]]||c.frequency||c.Frequency||"").replace(/[\r\n]+/g,' ').trim();
-return{name:nm,category:cat,outstanding:out,outstandingDays:od,frequency:freq,calls:nc,_person:c._person||""}
+return{name:nm,category:cat,outstanding:out,outstandingDays:od,frequency:freq,calls:nc,_person:c._person||"",_source:c._source||""}
 }
 var fmt=function(n){if(!n||n===0)return"0";if(n<0)return R+Math.abs(n).toLocaleString("en-IN");return R+n.toLocaleString("en-IN",{maximumFractionDigits:0})};
 var fmtS=function(n){if(!n||n===0)return"0";if(n>=10000000)return R+(n/10000000).toFixed(1)+"Cr";if(n>=100000)return R+(n/100000).toFixed(1)+"L";if(n>=1000)return R+(n/1000).toFixed(1)+"K";return fmt(n)};
@@ -133,6 +144,14 @@ var CS={PLATINUM:{bg:"#f5f3ff",c:"#7c3aed"},GOLD:{bg:"#fffbeb",c:"#d97706"},SILV
 function CP(p){var c=CS[p.v]||CS.SILVER;return <span className="pill" style={{background:c.bg,color:c.c}}>{p.v}</span>}
 function FP(p){var m={"Once a Week":{bg:"#fdf2f8",c:"#be185d"},"Twice a Week":{bg:"#fff7ed",c:"#c2410c"},"Thrice a Week":{bg:"#f0fdfa",c:"#0f766e"}};var c=m[p.v]||m["Thrice a Week"];return <span className="pill" style={{background:c.bg,color:c.c,fontSize:10}}>{p.v}</span>}
 function DP(p){var m={"0 to 30 Days":{bg:"#f0fdf4",c:"#15803d"},"Above 30 Days":{bg:"#fffbeb",c:"#a16207"},"Above 60 Days":{bg:"#fff7ed",c:"#c2410c"},"Above 90 Days":{bg:"#fef2f2",c:"#b91c1c"}};var c=m[p.v]||m["Above 90 Days"];return <span className="pill" style={{background:c.bg,color:c.c,fontSize:10}}>{p.v}</span>}
+
+/* ===== SOURCE PILL (for Jaya's slicer) ===== */
+function SourcePill(p){
+  if(!p.v)return null;
+  var m={HEADOFFICE:{bg:"#eff6ff",c:"#2563eb",label:"HO"},BANGALORE:{bg:"#fdf4ff",c:"#a21caf",label:"BLR"}};
+  var s=m[p.v]||{bg:"#f3f4f6",c:"#6b7280",label:p.v};
+  return <span className="pill" style={{background:s.bg,color:s.c,fontSize:9,marginLeft:4}}>{s.label}</span>
+}
 
 function App(){
 var _ad=useState({});var allData=_ad[0],setAllData=_ad[1];
@@ -148,22 +167,77 @@ var _rf=useState("ALL");var respF=_rf[0],setRespF=_rf[1];
 var _st=useState("");var search=_st[0],setSearch=_st[1];
 var _sb=useState("outstanding");var sortBy=_sb[0],setSortBy=_sb[1];
 var _ref=useState(false);var refreshing=_ref[0],setRefreshing=_ref[1];
+/* ===== JAYA SLICER STATE ===== */
+var _jf=useState("ALL");var jayaFilter=_jf[0],setJayaFilter=_jf[1];
 var tr=useRef(null);
 var wk=WEEKS[selWeek];
 var goToday=function(){setSelWeek(_tw);setSelDay(_td)};
 var isToday=selWeek===_tw&&selDay===_td;
 
-var fetchOne=useCallback(function(person){
-function viaJSONP(){return new Promise(function(resolve){try{var cb="_cb_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);var u=person.url+(person.url.indexOf("?")>=0?"&":"?")+"callback="+cb+"&_t="+Date.now();var tm=setTimeout(function(){done();resolve([])},15000);function done(){clearTimeout(tm);delete window[cb];try{var el=document.getElementById(cb);if(el)el.parentNode.removeChild(el)}catch(x){}}window[cb]=function(r){done();if(r&&r.success&&r.data){resolve(r.data.map(function(c){return normClient(Object.assign({},c,{_person:person.name}))}))}else{resolve([])}};var sc=document.createElement("script");sc.id=cb;sc.src=u;sc.onerror=function(){done();resolve([])};document.head.appendChild(sc)}catch(x){resolve([])}})}
-function viaFetch(){var controller;var signal;try{controller=new AbortController();signal=controller.signal}catch(x){return Promise.resolve(null)}var timeout=setTimeout(function(){controller.abort()},5000);return fetch(person.url+"?_t="+Date.now(),{redirect:"follow",signal:signal}).then(function(r){clearTimeout(timeout);return r.json()}).then(function(r){if(r&&r.success&&r.data){return r.data.map(function(c){return normClient(Object.assign({},c,{_person:person.name}))})}return null}).catch(function(){clearTimeout(timeout);return null})}
+/* ===== FETCH: supports ?sheet= param for multi-sheet persons ===== */
+var fetchOneSheet=useCallback(function(person,sheetName,sourceKey){
+function buildUrl(base,sheetParam){
+  var sep=base.indexOf("?")>=0?"&":"?";
+  var u=base+sep+"_t="+Date.now();
+  if(sheetParam)u+="&sheet="+encodeURIComponent(sheetParam);
+  return u;
+}
+function viaJSONP(){return new Promise(function(resolve){try{var cb="_cb_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);var u=buildUrl(person.url,sheetName)+"&callback="+cb;var tm=setTimeout(function(){done();resolve([])},15000);function done(){clearTimeout(tm);delete window[cb];try{var el=document.getElementById(cb);if(el)el.parentNode.removeChild(el)}catch(x){}}window[cb]=function(r){done();if(r&&r.success&&r.data){resolve(r.data.map(function(c){return normClient(Object.assign({},c,{_person:person.name,_source:sourceKey||""}))}))}else{resolve([])}};var sc=document.createElement("script");sc.id=cb;sc.src=u;sc.onerror=function(){done();resolve([])};document.head.appendChild(sc)}catch(x){resolve([])}})}
+function viaFetch(){var controller;var signal;try{controller=new AbortController();signal=controller.signal}catch(x){return Promise.resolve(null)}var timeout=setTimeout(function(){controller.abort()},5000);return fetch(buildUrl(person.url,sheetName),{redirect:"follow",signal:signal}).then(function(r){clearTimeout(timeout);return r.json()}).then(function(r){if(r&&r.success&&r.data){return r.data.map(function(c){return normClient(Object.assign({},c,{_person:person.name,_source:sourceKey||""}))})}return null}).catch(function(){clearTimeout(timeout);return null})}
 return viaFetch().then(function(result){if(result&&result.length>0)return result;return viaJSONP()})
 },[]);
+
+var fetchOne=useCallback(function(person){
+  /* If person has multiple sheets, fetch all and combine */
+  if(person.sheets&&person.sheets.length>0){
+    var promises=person.sheets.map(function(sh){
+      return fetchOneSheet(person,sh.sheetName,sh.key);
+    });
+    return Promise.all(promises).then(function(results){
+      var combined=[];
+      results.forEach(function(arr){if(arr&&arr.length)combined=combined.concat(arr)});
+      return combined;
+    });
+  }
+  /* Single sheet person — no sheet param needed */
+  return fetchOneSheet(person,null,"");
+},[fetchOneSheet]);
+
 var fetchAll=useCallback(function(silent){if(!silent){setLoading(true);setRefreshing(true)}var start=Date.now();var pending=PERSONS.length;var anySuccess=false;PERSONS.forEach(function(p){fetchOne(p).then(function(data){pending--;if(data.length>0){anySuccess=true;setAllData(function(prev){var next=Object.assign({},prev);next[p.name]=data;return next});setConnected(true)}if(pending===0){if(!silent){setLoading(false);setRefreshing(false)}}})})
 },[fetchOne]);
 useEffect(function(){fetchAll(false)},[]);
 useEffect(function(){if(!connected)return;if(tr.current)clearInterval(tr.current);tr.current=setInterval(function(){fetchAll(true)},30000);return function(){if(tr.current)clearInterval(tr.current)}},[connected,fetchAll]);
 
-var rawData=useMemo(function(){if(selPerson==="ALL"){var c=[];Object.keys(allData).forEach(function(k){allData[k].forEach(function(x){c.push(x)})});return c}var pd=allData[selPerson];return(pd&&pd.length>0)?pd:[]},[allData,selPerson]);
+/* ===== RAW DATA with Jaya slicer applied ===== */
+var rawData=useMemo(function(){
+  var data;
+  if(selPerson==="ALL"){
+    var c=[];
+    Object.keys(allData).forEach(function(k){allData[k].forEach(function(x){c.push(x)})});
+    data=c;
+  }else{
+    var pd=allData[selPerson];
+    data=(pd&&pd.length>0)?pd:[];
+  }
+  /* Apply Jaya slicer filter */
+  if(jayaFilter!=="ALL"){
+    data=data.filter(function(x){
+      /* If this is Jaya's data, filter by source */
+      if(x._person==="Jaya"){return x._source===jayaFilter}
+      return true; /* Non-Jaya data passes through */
+    });
+  }
+  return data;
+},[allData,selPerson,jayaFilter]);
+
+/* Count Jaya's clients per source for slicer badges */
+var jayaCounts=useMemo(function(){
+  var jd=allData["Jaya"]||[];
+  var ho=0,blr=0;
+  jd.forEach(function(c){if(c._source==="BANGALORE")blr++;else ho++});
+  return{total:jd.length,ho:ho,blr:blr};
+},[allData]);
+
 var isSunday=selDay>0&&SUN.indexOf(selDay)>=0;
 var processed=useMemo(function(){return rawData.map(function(c){var wdWeek=gWD(c,wk.d);var wdActive;if(selDay>0){var v=c.calls[selDay];var y=v==="YES"?1:0;var n=v==="NO"?1:0;var att=y+n;wdActive={req:1,yes:y,no:n,att:att,met:y>=1,short:Math.max(0,1-y)}}else{wdActive=wdWeek}var st="on_track";if(wdActive.att===0)st="no_calls";else if(!wdActive.met)st="behind";var dayVal=selDay>0?(c.calls[selDay]||null):null;return Object.assign({},c,{wd:wdWeek,wdActive:wdActive,st:st,dayVal:dayVal})})},[rawData,selWeek,selDay]);
 var workDays=wk.d.filter(function(d){return SUN.indexOf(d)<0}).length;
@@ -172,12 +246,19 @@ var tgtC=selDay>0?(isSunday?0:dailyTgt):dailyTgt*workDays;
 var filtered=useMemo(function(){var d=processed.slice();if(isSunday)return[];if(selDay>0){d=d.filter(function(x){return x.dayVal==="YES"||x.dayVal==="NO"})}if(catF!=="ALL")d=d.filter(function(x){return x.category===catF});if(statF!=="ALL")d=d.filter(function(x){return x.st===statF});if(selDay>0){if(callF==="UNCALLED")return[];if(respF==="YES")d=d.filter(function(x){return x.dayVal==="YES"});if(respF==="NO")d=d.filter(function(x){return x.dayVal==="NO"})}else{if(callF==="CALLED")d=d.filter(function(x){return x.wd.att>0});if(callF==="UNCALLED")d=d.filter(function(x){return x.wd.att===0});if(respF==="YES")d=d.filter(function(x){return x.wd.yes>0});if(respF==="NO")d=d.filter(function(x){return x.wd.no>0&&x.wd.yes===0})}if(search)d=d.filter(function(x){return x.name.toLowerCase().indexOf(search.toLowerCase())>=0});d.sort(function(a,b){return sortBy==="outstanding"?b.outstanding-a.outstanding:sortBy==="shortfall"?b.wdActive.short-a.wdActive.short:a.name.localeCompare(b.name)});return d},[processed,catF,statF,callF,respF,search,sortBy,selDay,isSunday]);
 var stats=useMemo(function(){var t=processed.length,on=0,bh=0,nc=0,ans=0,una=0,to=0,totalAttempts=0;var cc={PLATINUM:0,GOLD:0,SILVER:0};if(isSunday)return{total:t,onTrack:0,behind:0,noCalls:t,ans:0,una:0,to:0,calledOut:0,uncalledOut:0,totalAttempts:0,cc:cc};processed.forEach(function(d){if(d.st==="on_track")on++;else if(d.st==="behind")bh++;else nc++;if(selDay>0){if(d.dayVal==="YES"){ans++;totalAttempts++}else if(d.dayVal==="NO"){una++;totalAttempts++}}else{ans+=d.wdActive.yes;una+=d.wdActive.no;totalAttempts+=d.wdActive.att}to+=Math.max(0,d.outstanding);if(cc[d.category]!==undefined)cc[d.category]++});var calledOut=0,uncalledOut=0;processed.forEach(function(d){var amt=Math.max(0,d.outstanding);var wasCalled=selDay>0?(d.dayVal==="YES"||d.dayVal==="NO"):d.wdActive.att>0;if(wasCalled)calledOut+=amt;else uncalledOut+=amt});return{total:t,onTrack:on,behind:bh,noCalls:nc,ans:ans,una:una,to:to,calledOut:calledOut,uncalledOut:uncalledOut,totalAttempts:totalAttempts,cc:cc}},[processed,selDay,isSunday]);
 var called=stats.totalAttempts;
-var scores=useMemo(function(){var scoreDays=selDay>0?[selDay]:wk.d;var isSun=selDay>0&&SUN.indexOf(selDay)>=0;return PERSONS.map(function(p){var pd=(allData[p.name]||[]).map(function(c){var norm=normClient(Object.assign({},c,{_person:p.name}));var wd;if(selDay>0){var v=norm.calls[selDay];var y=v==="YES"?1:0;var n=v==="NO"?1:0;var att=y+n;wd={req:1,yes:y,no:n,att:att,met:y>=1,short:Math.max(0,1-y)}}else{wd=gWD(norm,scoreDays)}return Object.assign({},norm,{wd:wd})});var tot=pd.length,cal=0,ans=0,otr=0,ty=0;pd.forEach(function(c){var wasCalled=c.wd.att>0;if(wasCalled)cal++;ans+=c.wd.yes;if(c.wd.met&&wasCalled)otr++;ty+=c.wd.yes});var wd2=selDay>0?(isSun?0:1):scoreDays.filter(function(d){return SUN.indexOf(d)<0}).length;var tg=p.tgt*wd2;var cp=tg>0?Math.round(ty/tg*100):0;var cv=tot>0?Math.round(cal/tot*100):0;var cm=tot>0?Math.round(otr/tot*100):0;var sc=tg>0?Math.min(100,Math.round(ty/tg*100)):0;var fl=[];if(isSun){fl.push("Sunday")}else{if(sc<25)fl.push("Critical");else if(sc<50)fl.push("Below 50%");if(cv<40)fl.push("Low coverage")}return{name:p.name,color:p.color,tgt:p.tgt,tot:tot,cal:cal,ans:ans,otr:otr,cp:cp,cv:cv,cm:cm,sc:sc,fl:fl,tg:tg}})},[allData,selWeek,selDay]);
+var scores=useMemo(function(){var scoreDays=selDay>0?[selDay]:wk.d;var isSun=selDay>0&&SUN.indexOf(selDay)>=0;return PERSONS.map(function(p){var pd=(allData[p.name]||[]).filter(function(c){
+  /* Apply Jaya slicer to scorecard too */
+  if(jayaFilter!=="ALL"&&p.name==="Jaya"){return c._source===jayaFilter}
+  return true;
+}).map(function(c){var norm=normClient(Object.assign({},c,{_person:p.name,_source:c._source}));var wd;if(selDay>0){var v=norm.calls[selDay];var y=v==="YES"?1:0;var n=v==="NO"?1:0;var att=y+n;wd={req:1,yes:y,no:n,att:att,met:y>=1,short:Math.max(0,1-y)}}else{wd=gWD(norm,scoreDays)}return Object.assign({},norm,{wd:wd})});var tot=pd.length,cal=0,ans=0,otr=0,ty=0;pd.forEach(function(c){var wasCalled=c.wd.att>0;if(wasCalled)cal++;ans+=c.wd.yes;if(c.wd.met&&wasCalled)otr++;ty+=c.wd.yes});var wd2=selDay>0?(isSun?0:1):scoreDays.filter(function(d){return SUN.indexOf(d)<0}).length;var tg=p.tgt*wd2;var cp=tg>0?Math.round(ty/tg*100):0;var cv=tot>0?Math.round(cal/tot*100):0;var cm=tot>0?Math.round(otr/tot*100):0;var sc=tg>0?Math.min(100,Math.round(ty/tg*100)):0;var fl=[];if(isSun){fl.push("Sunday")}else{if(sc<25)fl.push("Critical");else if(sc<50)fl.push("Below 50%");if(cv<40)fl.push("Low coverage")}return{name:p.name,color:p.color,tgt:p.tgt,tot:tot,cal:cal,ans:ans,otr:otr,cp:cp,cv:cv,cm:cm,sc:sc,fl:fl,tg:tg}})},[allData,selWeek,selDay,jayaFilter]);
 
 /* ====== RENDER ====== */
 var teamScore=(function(){if(selPerson==="ALL"){var t=0;scores.forEach(function(s){t+=s.sc});return scores.length?Math.round(t/scores.length):0}var f=scores.find(function(s){return s.name===selPerson});return f?f.sc:0})();
 var scoreColor=teamScore>=70?"#16a34a":teamScore>=40?"#d97706":"#dc2626";
 var pct=tgtC>0?Math.round(called/tgtC*100):0;
+
+/* Show Jaya slicer when viewing Jaya or ALL team */
+var showJayaSlicer=selPerson==="ALL"||selPerson==="Jaya";
 
 return <div className="container">
 
@@ -199,6 +280,28 @@ return <div className="container">
 <span className="sb-count">{ct||"..."}</span>
 </button>})}
 </div>
+
+<div className="sb-divider"/>
+
+{/* ===== JAYA SHEET SLICER IN SIDEBAR ===== */}
+{showJayaSlicer && <div className="sb-section">
+<div className="sb-label">Jaya — Sheet Filter</div>
+<div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
+{[{key:"ALL",label:"All",count:jayaCounts.total},{key:"HEADOFFICE",label:"Head Office",count:jayaCounts.ho},{key:"BANGALORE",label:"Bangalore",count:jayaCounts.blr}].map(function(opt){
+  var isActive=jayaFilter===opt.key;
+  var bgMap={ALL:"#f43f5e",HEADOFFICE:"#2563eb",BANGALORE:"#a21caf"};
+  return <button key={opt.key} className="sb-mini-btn" onClick={function(){setJayaFilter(opt.key)}} style={{
+    flex:"1 1 auto",minWidth:50,
+    background:isActive?bgMap[opt.key]:"rgba(255,255,255,.04)",
+    color:isActive?"#fff":"rgba(255,255,255,.55)",
+    fontWeight:isActive?700:600,
+    borderRadius:8,
+    padding:"7px 6px",
+    fontSize:10
+  }}>{opt.label} <span style={{opacity:.7}}>({opt.count})</span></button>
+})}
+</div>
+</div>}
 
 <div className="sb-divider"/>
 <div className="sb-section">
@@ -234,9 +337,26 @@ return <div className="container">
 {/* ===== MAIN CONTENT ===== */}
 <div className="main">
 <div className="section-hdr">
-<h1>{selPerson==="ALL"?"Dashboard Overview":selPerson+"'s Dashboard"}</h1>
+<h1>{selPerson==="ALL"?"Dashboard Overview":selPerson+"'s Dashboard"}{jayaFilter!=="ALL"&&(selPerson==="Jaya"||selPerson==="ALL")?" — "+(jayaFilter==="BANGALORE"?"Bangalore":"Head Office"):""}</h1>
 <p>{selDay>0?"March "+selDay+", 2026":(isToday?"Today — ":"")+wk.f+", March 2026"}{isSunday?" (Sunday — No calls)":""}</p>
 </div>
+
+{/* ===== JAYA SLICER BAR (Main Area) ===== */}
+{showJayaSlicer && <div style={{marginBottom:16,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+<span style={{fontSize:12,fontWeight:700,color:"#6b7280",marginRight:4}}>Jaya's Sheet:</span>
+{[{key:"ALL",label:"All Data",icon:"\uD83D\uDCCB",count:jayaCounts.total},{key:"HEADOFFICE",label:"Head Office",icon:"\uD83C\uDFE2",count:jayaCounts.ho},{key:"BANGALORE",label:"Bangalore",icon:"\uD83C\uDFD9\uFE0F",count:jayaCounts.blr}].map(function(opt){
+  var isActive=jayaFilter===opt.key;
+  var bgActive={ALL:"#f43f5e",HEADOFFICE:"#2563eb",BANGALORE:"#a21caf"};
+  var bgInactive={ALL:"#fff",HEADOFFICE:"#eff6ff",BANGALORE:"#fdf4ff"};
+  var colorInactive={ALL:"#6b7280",HEADOFFICE:"#2563eb",BANGALORE:"#a21caf"};
+  return <button key={opt.key} className="slicer-btn" onClick={function(){setJayaFilter(opt.key)}} style={{
+    background:isActive?bgActive[opt.key]:bgInactive[opt.key],
+    color:isActive?"#fff":colorInactive[opt.key],
+    borderColor:isActive?bgActive[opt.key]:"#e5e7eb",
+    boxShadow:isActive?"0 2px 8px rgba(0,0,0,.12)":"none"
+  }}>{opt.icon} {opt.label} ({opt.count})</button>
+})}
+</div>}
 
 {/* KPI Cards */}
 <div className="card-grid" style={{gridTemplateColumns:"repeat(5,1fr)"}}>
@@ -304,7 +424,7 @@ return <div className="container">
 <select value={sortBy} onChange={function(e){setSortBy(e.target.value)}} style={{padding:"8px 12px",borderRadius:10,border:"1.5px solid #e5e7eb",background:"#fff",color:"#374151",fontSize:12,fontWeight:600}}><option value="outstanding">Sort: Amount</option><option value="shortfall">Sort: Shortfall</option><option value="name">Sort: Name</option></select>
 </div>
 
-<div style={{fontSize:12,color:"#9ca3af",fontWeight:600,marginBottom:8}}>Showing {filtered.length} of {processed.length} clients{selPerson!=="ALL"&&<span style={{color:"#667eea"}}> | {selPerson}</span>}</div>
+<div style={{fontSize:12,color:"#9ca3af",fontWeight:600,marginBottom:8}}>Showing {filtered.length} of {processed.length} clients{selPerson!=="ALL"&&<span style={{color:"#667eea"}}> | {selPerson}</span>}{jayaFilter!=="ALL"&&<span style={{color:"#a21caf"}}> | {jayaFilter==="BANGALORE"?"Bangalore":"Head Office"}</span>}</div>
 
 {/* Client Table */}
 <div className="tbl-wrap">
@@ -313,6 +433,7 @@ return <div className="container">
 <th style={{position:"sticky",left:0,background:"#f9fafb",zIndex:2}}>Client Name</th>
 {selPerson==="ALL"&&<th>Person</th>}
 <th>Category</th><th style={{textAlign:"right"}}>Outstanding</th><th>Overdue</th><th>Frequency</th><th style={{textAlign:"center"}}>Calls</th><th>Status</th>
+{(selPerson==="ALL"||(selPerson==="Jaya"&&jayaFilter==="ALL"))&&<th>Source</th>}
 {wk.d.map(function(d){return <th key={d} style={{textAlign:"center",minWidth:28,color:SUN.indexOf(d)>=0?"#d4d4d8":"#6b7280",background:SUN.indexOf(d)>=0?"#fafafa":"#f9fafb"}}>{d}</th>})}
 </tr></thead>
 <tbody>{filtered.map(function(cl,i){var wa=cl.wdActive;var bc=cl.st==="no_calls"?"#dc2626":cl.st==="behind"?"#d97706":"#16a34a";return <tr key={i}>
@@ -324,6 +445,7 @@ return <div className="container">
 <td><FP v={cl.frequency}/></td>
 <td style={{textAlign:"center"}}><span className="num" style={{fontSize:13}}><span style={{color:"#16a34a"}}>{wa.yes}</span><span style={{color:"#d4d4d8"}}>/</span>{wa.req}</span></td>
 <td><SB met={wa.met} short={wa.short} att={wa.att}/></td>
+{(selPerson==="ALL"||(selPerson==="Jaya"&&jayaFilter==="ALL"))&&<td>{cl._person==="Jaya"&&cl._source?<SourcePill v={cl._source}/>:null}</td>}
 {wk.d.map(function(d){var v=cl.calls[d];var bg=v==="YES"?"#dcfce7":v==="NO"?"#fee2e2":SUN.indexOf(d)>=0?"#fafafa":"#fff";var co=v==="YES"?"#166534":v==="NO"?"#991b1b":"#e5e7eb";return <td key={d} style={{textAlign:"center",fontSize:13,fontWeight:700,color:co,background:bg,minWidth:28}}>{v==="YES"?"\u2713":v==="NO"?"\u2717":"\u2022"}</td>})}
 </tr>})}</tbody></table></div>
 {filtered.length===0&&<div style={{padding:50,textAlign:"center",color:"#9ca3af"}}><div style={{fontSize:40,marginBottom:8}}>{isSunday?"\u2600":"📋"}</div><div style={{fontSize:15,fontWeight:600,color:"#6b7280"}}>{isSunday?"Sunday — No calls scheduled":loading?"Loading data from Google Sheets...":rawData.length===0?(connected?"No data for "+(selPerson==="ALL"?"any member":selPerson):"Connecting..."):"No clients match filters"}</div></div>}
