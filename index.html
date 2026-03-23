@@ -13,31 +13,11 @@ button{cursor:pointer;transition:all .2s}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 .num{font-family:'Poppins',sans-serif;font-weight:700;letter-spacing:-.02em}
 table{font-family:inherit;border-collapse:collapse}td,th{border:none}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:#f1f1f1}
 ::-webkit-scrollbar-thumb{background:#c4c4c4;border-radius:4px}
-
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1f36 0%,#2d3561 50%,#1a1f36 100%);padding:20px}
-.login-card{background:#fff;border-radius:24px;padding:48px 40px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:fadeIn .4s}
-.login-logo{font-size:22px;font-weight:800;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;margin-bottom:4px}
-.login-sub{text-align:center;color:#6b7280;font-size:13px;margin-bottom:32px}
-.login-avatar{width:72px;height:72px;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff}
-.login-name{text-align:center;font-size:18px;font-weight:700;color:#1a1f36;margin-bottom:24px}
-.login-pin-wrap{position:relative;margin-bottom:16px}
-.login-pin{width:100%;padding:14px 44px 14px 16px;border-radius:14px;border:2px solid #e5e7eb;background:#f9fafb;font-size:16px;font-weight:600;letter-spacing:6px;text-align:center;outline:none;transition:all .2s}
-.login-pin:focus{border-color:#667eea;background:#fff;box-shadow:0 0 0 4px rgba(102,126,234,.1)}
-.login-pin.error{border-color:#dc2626;animation:shake .4s}
-.login-btn{width:100%;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:700;color:#fff;cursor:pointer;transition:all .2s}
-.login-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(102,126,234,.4)}
-.login-btn:active{transform:translateY(0)}
-.login-error{text-align:center;color:#dc2626;font-size:12px;font-weight:600;margin-top:8px;min-height:18px}
-.login-hint{text-align:center;color:#9ca3af;font-size:11px;margin-top:20px}
-.login-invalid{text-align:center;padding:60px 20px}
-.login-invalid h2{color:#dc2626;margin-bottom:8px}
-.login-invalid p{color:#6b7280;font-size:14px}
 
 .container{display:flex;height:100vh;overflow:hidden}
 
@@ -108,7 +88,6 @@ table{font-family:inherit;border-collapse:collapse}td,th{border:none}
 .sidebar{width:100%;max-height:none;overflow:visible}
 .main{padding:16px}
 .card-grid{grid-template-columns:1fr 1fr !important}
-.login-card{padding:32px 24px}
 }
 
 .loc-slicer{display:flex;gap:6px;margin-top:8px;margin-bottom:16px}
@@ -134,22 +113,8 @@ var PERSONS=[
 {name:"Disha",url:"https://script.google.com/macros/s/AKfycbxGTaqdhHe0KhnkJXRXhB0Oah4EuQa3e58CJC0woj9KeEs9M1fEznBfNXSY5awbtNx8Bg/exec",color:"#06b6d4",tgt:50},
 {name:"Jaya",url:"https://script.google.com/macros/s/AKfycbw6WVSMzFgg-lK4QIBJCD8ymRMb8JjZi8toddj-kXV9T_mNQqQk9DwUCF34EvztLgGj8A/exec",color:"#f43f5e",tgt:60}
 ];
-
-/* ====== AUTH CONFIG — Change PINs here ====== */
-var AUTH={
-admin:{pin:"0000",label:"Admin"},
-nitasha:{pin:"1001",label:"Nitasha",person:"Nitasha"},
-surya:{pin:"1002",label:"Surya",person:"Surya"},
-disha:{pin:"1003",label:"Disha",person:"Disha"},
-jaya:{pin:"1004",label:"Jaya",person:"Jaya"}
-};
-/* ============================================= */
-
 var _now=new Date();var _td=(_now.getMonth()===2)?_now.getDate():16;var _tw=_td<=7?0:_td<=14?1:_td<=21?2:_td<=28?3:4;
 var FD=[];
-
-function getViewParam(){try{var u=new URLSearchParams(window.location.search);return(u.get("view")||"").toLowerCase().trim()}catch(e){return""}}
-
 function normClient(c){
 var nc={};var raw=c.calls||{};
 for(var k in raw){if(raw.hasOwnProperty(k)){var d=parseInt(k,10);var v=String(raw[k]).trim().toUpperCase();if(!isNaN(d)&&d>=1&&d<=31&&(v==="YES"||v==="NO"))nc[d]=v}}
@@ -177,44 +142,11 @@ function DP(p){var m={"0 to 30 Days":{bg:"#f0fdf4",c:"#15803d"},"Above 30 Days":
 
 function SSP(p){var m={HeadOffice:{bg:"#eff6ff",c:"#2563eb",lb:"Head Office"},Bangalore:{bg:"#fdf4ff",c:"#a21caf",lb:"Bangalore"}};var s=m[p.v]||m.HeadOffice;return <span className="pill" style={{background:s.bg,color:s.c,fontSize:10}}>{s.lb}</span>}
 
-/* ====== LOGIN SCREEN ====== */
-function LoginScreen(p){
-var _pin=useState("");var pin=_pin[0],setPin=_pin[1];
-var _err=useState("");var err=_err[0],setErr=_err[1];
-var _shake=useState(false);var shake=_shake[0],setShake=_shake[1];
-var cfg=p.authCfg;
-var personObj=cfg.person?PERSONS.find(function(x){return x.name===cfg.person}):null;
-var bgColor=personObj?personObj.color:"#667eea";
-var initials=cfg.label==="Admin"?"\uD83D\uDD12":cfg.label.charAt(0).toUpperCase();
-
-function handleSubmit(e){if(e)e.preventDefault();if(pin===cfg.pin){setErr("");p.onSuccess()}else{setErr("Incorrect PIN. Please try again.");setShake(true);setTimeout(function(){setShake(false)},500)}}
-function handleKey(e){if(e.key==="Enter")handleSubmit()}
-
-return <div className="login-wrap">
-<div className="login-card">
-<div className="login-logo">{"\uD83D\uDCCA"} Collection Calling Tracker</div>
-<div className="login-sub">March 2026</div>
-<div className="login-avatar" style={{background:bgColor}}>{initials}</div>
-<div className="login-name">{cfg.label==="Admin"?"Admin Access":cfg.label+"'s Dashboard"}</div>
-<div className="login-pin-wrap">
-<input className={"login-pin"+(shake?" error":"")} type="password" inputMode="numeric" maxLength={8} placeholder="Enter PIN" value={pin} onChange={function(e){setPin(e.target.value);setErr("")}} onKeyDown={handleKey} autoFocus/>
-</div>
-<button className="login-btn" style={{background:"linear-gradient(135deg,"+bgColor+","+bgColor+"cc)"}} onClick={handleSubmit}>Unlock Dashboard</button>
-<div className="login-error">{err}</div>
-<div className="login-hint">Enter your PIN to access the dashboard</div>
-</div>
-</div>
-}
-
-/* ====== MAIN APP ====== */
-function App(p){
-var isAdmin=p.role==="admin";
-var lockedPerson=p.lockedPerson||null;
-
+function App(){
 var _ad=useState({});var allData=_ad[0],setAllData=_ad[1];
 var _ld=useState(true);var loading=_ld[0],setLoading=_ld[1];
 var _cn=useState(false);var connected=_cn[0],setConnected=_cn[1];
-var _sp=useState(isAdmin?"ALL":(lockedPerson||"ALL"));var selPerson=_sp[0],setSelPerson=_sp[1];
+var _sp=useState("ALL");var selPerson=_sp[0],setSelPerson=_sp[1];
 var _sw=useState(_tw);var selWeek=_sw[0],setSelWeek=_sw[1];
 var _sdy=useState(_td);var selDay=_sdy[0],setSelDay=_sdy[1];
 var _cf=useState("ALL");var catF=_cf[0],setCatF=_cf[1];
@@ -230,15 +162,12 @@ var wk=WEEKS[selWeek];
 var goToday=function(){setSelWeek(_tw);setSelDay(_td)};
 var isToday=selWeek===_tw&&selDay===_td;
 
-/* For non-admin, only fetch their own person's data */
-var personsToFetch=isAdmin?PERSONS:PERSONS.filter(function(per){return per.name===lockedPerson});
-
 var fetchOne=useCallback(function(person){
 function viaJSONP(){return new Promise(function(resolve){try{var cb="_cb_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);var u=person.url+(person.url.indexOf("?")>=0?"&":"?")+"callback="+cb+"&_t="+Date.now();var tm=setTimeout(function(){done();resolve([])},15000);function done(){clearTimeout(tm);delete window[cb];try{var el=document.getElementById(cb);if(el)el.parentNode.removeChild(el)}catch(x){}}window[cb]=function(r){done();if(r&&r.success&&r.data){resolve(r.data.map(function(c){return normClient(Object.assign({},c,{_person:person.name}))}))}else{resolve([])}};var sc=document.createElement("script");sc.id=cb;sc.src=u;sc.onerror=function(){done();resolve([])};document.head.appendChild(sc)}catch(x){resolve([])}})}
 function viaFetch(){var controller;var signal;try{controller=new AbortController();signal=controller.signal}catch(x){return Promise.resolve(null)}var timeout=setTimeout(function(){controller.abort()},5000);return fetch(person.url+"?_t="+Date.now(),{redirect:"follow",signal:signal}).then(function(r){clearTimeout(timeout);return r.json()}).then(function(r){if(r&&r.success&&r.data){return r.data.map(function(c){return normClient(Object.assign({},c,{_person:person.name}))})}return null}).catch(function(){clearTimeout(timeout);return null})}
 return viaFetch().then(function(result){if(result&&result.length>0)return result;return viaJSONP()})
 },[]);
-var fetchAll=useCallback(function(silent){if(!silent){setLoading(true);setRefreshing(true)}var pending=personsToFetch.length;var anySuccess=false;personsToFetch.forEach(function(per){fetchOne(per).then(function(data){pending--;if(data.length>0){anySuccess=true;setAllData(function(prev){var next=Object.assign({},prev);next[per.name]=data;return next});setConnected(true)}if(pending===0){if(!silent){setLoading(false);setRefreshing(false)}}})})
+var fetchAll=useCallback(function(silent){if(!silent){setLoading(true);setRefreshing(true)}var start=Date.now();var pending=PERSONS.length;var anySuccess=false;PERSONS.forEach(function(p){fetchOne(p).then(function(data){pending--;if(data.length>0){anySuccess=true;setAllData(function(prev){var next=Object.assign({},prev);next[p.name]=data;return next});setConnected(true)}if(pending===0){if(!silent){setLoading(false);setRefreshing(false)}}})})
 },[fetchOne]);
 useEffect(function(){fetchAll(false)},[]);
 useEffect(function(){if(!connected)return;if(tr.current)clearInterval(tr.current);tr.current=setInterval(function(){fetchAll(true)},30000);return function(){if(tr.current)clearInterval(tr.current)}},[connected,fetchAll]);
@@ -250,59 +179,37 @@ var jayaCounts=useMemo(function(){var pd=allData["Jaya"]||[];var ho=0,bl=0;pd.fo
 var isSunday=selDay>0&&SUN.indexOf(selDay)>=0;
 var processed=useMemo(function(){return rawData.map(function(c){var wdWeek=gWD(c,wk.d);var wdActive;if(selDay>0){var v=c.calls[selDay];var y=v==="YES"?1:0;var n=v==="NO"?1:0;var att=y+n;wdActive={req:1,yes:y,no:n,att:att,met:att>=1,short:Math.max(0,1-att)}}else{wdActive=wdWeek}var st="on_track";if(wdActive.att===0)st="no_calls";else if(!wdActive.met)st="behind";var dayVal=selDay>0?(c.calls[selDay]||null):null;return Object.assign({},c,{wd:wdWeek,wdActive:wdActive,st:st,dayVal:dayVal})})},[rawData,selWeek,selDay]);
 var workDays=wk.d.filter(function(d){return SUN.indexOf(d)<0}).length;
-var dailyTgt=selPerson==="ALL"?PERSONS.reduce(function(s,per){return s+per.tgt},0):(PERSONS.find(function(per){return per.name===selPerson})||{tgt:60}).tgt;
+var dailyTgt=selPerson==="ALL"?PERSONS.reduce(function(s,p){return s+p.tgt},0):(PERSONS.find(function(p){return p.name===selPerson})||{tgt:60}).tgt;
 var tgtC=selDay>0?(isSunday?0:dailyTgt):dailyTgt*workDays;
 var filtered=useMemo(function(){var d=processed.slice();if(isSunday)return[];if(catF!=="ALL")d=d.filter(function(x){return x.category===catF});if(statF!=="ALL")d=d.filter(function(x){return x.st===statF});if(selDay>0){if(callF==="CALLED")d=d.filter(function(x){return x.dayVal==="YES"||x.dayVal==="NO"});if(callF==="UNCALLED")d=d.filter(function(x){return x.dayVal!=="YES"&&x.dayVal!=="NO"});if(respF==="YES")d=d.filter(function(x){return x.dayVal==="YES"});if(respF==="NO")d=d.filter(function(x){return x.dayVal==="NO"})}else{if(callF==="CALLED")d=d.filter(function(x){return x.wd.att>0});if(callF==="UNCALLED")d=d.filter(function(x){return x.wd.att===0});if(respF==="YES")d=d.filter(function(x){return x.wd.yes>0});if(respF==="NO")d=d.filter(function(x){return x.wd.no>0&&x.wd.yes===0})}if(search)d=d.filter(function(x){return x.name.toLowerCase().indexOf(search.toLowerCase())>=0});d.sort(function(a,b){return sortBy==="outstanding"?b.outstanding-a.outstanding:sortBy==="shortfall"?b.wdActive.short-a.wdActive.short:a.name.localeCompare(b.name)});return d},[processed,catF,statF,callF,respF,search,sortBy,selDay,isSunday]);
 var stats=useMemo(function(){var t=processed.length,on=0,bh=0,nc=0,ans=0,una=0,to=0,totalAttempts=0;var cc={PLATINUM:0,GOLD:0,SILVER:0};if(isSunday)return{total:t,onTrack:0,behind:0,noCalls:t,ans:0,una:0,to:0,calledOut:0,uncalledOut:0,totalAttempts:0,cc:cc};processed.forEach(function(d){if(d.st==="on_track")on++;else if(d.st==="behind")bh++;else nc++;if(selDay>0){if(d.dayVal==="YES"){ans++;totalAttempts++}else if(d.dayVal==="NO"){una++;totalAttempts++}}else{ans+=d.wdActive.yes;una+=d.wdActive.no;totalAttempts+=d.wdActive.att}to+=Math.max(0,d.outstanding);if(cc[d.category]!==undefined)cc[d.category]++});var calledOut=0,uncalledOut=0;processed.forEach(function(d){var amt=Math.max(0,d.outstanding);var wasCalled=selDay>0?(d.dayVal==="YES"||d.dayVal==="NO"):d.wdActive.att>0;if(wasCalled)calledOut+=amt;else uncalledOut+=amt});return{total:t,onTrack:on,behind:bh,noCalls:nc,ans:ans,una:una,to:to,calledOut:calledOut,uncalledOut:uncalledOut,totalAttempts:totalAttempts,cc:cc}},[processed,selDay,isSunday]);
 var called=stats.totalAttempts;
-var scores=useMemo(function(){var scoreDays=selDay>0?[selDay]:wk.d;var isSun=selDay>0&&SUN.indexOf(selDay)>=0;var personsForScore=isAdmin?PERSONS:PERSONS.filter(function(per){return per.name===lockedPerson});return personsForScore.map(function(per){var pd=(allData[per.name]||[]).map(function(c){var norm=normClient(Object.assign({},c,{_person:per.name}));var wd;if(selDay>0){var v=norm.calls[selDay];var y=v==="YES"?1:0;var n=v==="NO"?1:0;var att=y+n;wd={req:1,yes:y,no:n,att:att,met:att>=1,short:Math.max(0,1-att)}}else{wd=gWD(norm,scoreDays)}return Object.assign({},norm,{wd:wd})});var tot=pd.length,cal=0,ans=0,otr=0,ty=0;pd.forEach(function(c){var wasCalled=c.wd.att>0;if(wasCalled)cal++;ans+=c.wd.yes;if(c.wd.met&&wasCalled)otr++;ty+=c.wd.att});var wd2=selDay>0?(isSun?0:1):scoreDays.filter(function(d){return SUN.indexOf(d)<0}).length;var tg=per.tgt*wd2;var cp=tg>0?Math.round(ty/tg*100):0;var cv=tot>0?Math.round(cal/tot*100):0;var cm=tot>0?Math.round(otr/tot*100):0;var sc=tg>0?Math.min(100,Math.round(ty/tg*100)):0;var fl=[];if(isSun){fl.push("Sunday")}else{if(sc<25)fl.push("Critical");else if(sc<50)fl.push("Below 50%");if(cv<40)fl.push("Low coverage")}return{name:per.name,color:per.color,tgt:per.tgt,tot:tot,cal:cal,ans:ans,otr:otr,cp:cp,cv:cv,cm:cm,sc:sc,fl:fl,tg:tg}})},[allData,selWeek,selDay,isAdmin,lockedPerson]);
+var scores=useMemo(function(){var scoreDays=selDay>0?[selDay]:wk.d;var isSun=selDay>0&&SUN.indexOf(selDay)>=0;return PERSONS.map(function(p){var pd=(allData[p.name]||[]).map(function(c){var norm=normClient(Object.assign({},c,{_person:p.name}));var wd;if(selDay>0){var v=norm.calls[selDay];var y=v==="YES"?1:0;var n=v==="NO"?1:0;var att=y+n;wd={req:1,yes:y,no:n,att:att,met:att>=1,short:Math.max(0,1-att)}}else{wd=gWD(norm,scoreDays)}return Object.assign({},norm,{wd:wd})});var tot=pd.length,cal=0,ans=0,otr=0,ty=0;pd.forEach(function(c){var wasCalled=c.wd.att>0;if(wasCalled)cal++;ans+=c.wd.yes;if(c.wd.met&&wasCalled)otr++;ty+=c.wd.att});var wd2=selDay>0?(isSun?0:1):scoreDays.filter(function(d){return SUN.indexOf(d)<0}).length;var tg=p.tgt*wd2;var cp=tg>0?Math.round(ty/tg*100):0;var cv=tot>0?Math.round(cal/tot*100):0;var cm=tot>0?Math.round(otr/tot*100):0;var sc=tg>0?Math.min(100,Math.round(ty/tg*100)):0;var fl=[];if(isSun){fl.push("Sunday")}else{if(sc<25)fl.push("Critical");else if(sc<50)fl.push("Below 50%");if(cv<40)fl.push("Low coverage")}return{name:p.name,color:p.color,tgt:p.tgt,tot:tot,cal:cal,ans:ans,otr:otr,cp:cp,cv:cv,cm:cm,sc:sc,fl:fl,tg:tg}})},[allData,selWeek,selDay]);
 
 /* ====== RENDER ====== */
-var teamScore=(function(){if(isAdmin&&selPerson==="ALL"){var t=0;scores.forEach(function(s){t+=s.sc});return scores.length?Math.round(t/scores.length):0}var nm=isAdmin?selPerson:lockedPerson;var f=scores.find(function(s){return s.name===nm});return f?f.sc:0})();
+var teamScore=(function(){if(selPerson==="ALL"){var t=0;scores.forEach(function(s){t+=s.sc});return scores.length?Math.round(t/scores.length):0}var f=scores.find(function(s){return s.name===selPerson});return f?f.sc:0})();
 var scoreColor=teamScore>=70?"#16a34a":teamScore>=40?"#d97706":"#dc2626";
 var pct=tgtC>0?Math.round(called/tgtC*100):0;
-var lockedPersonObj=lockedPerson?PERSONS.find(function(per){return per.name===lockedPerson}):null;
 
 return <div className="container">
 
 <div className="sidebar">
 <div className="sb-header">
-<div className="sb-logo">{"\uD83D\uDCCA"} Collection Calling Tracker</div>
+<div className="sb-logo">📊 Collection Calling Tracker</div>
 <div className="sb-sub">March 2026</div>
-{!isAdmin&&lockedPerson&&<div style={{marginTop:8,padding:"6px 10px",background:"rgba(255,255,255,.08)",borderRadius:8,fontSize:11,color:"rgba(255,255,255,.5)",textAlign:"center"}}>{"\uD83D\uDD12"} Logged in as <strong style={{color:"#fff"}}>{lockedPerson}</strong></div>}
-{isAdmin&&<div style={{marginTop:8,padding:"6px 10px",background:"rgba(102,126,234,.2)",borderRadius:8,fontSize:11,color:"#a5b4fc",textAlign:"center",fontWeight:600}}>{"\uD83D\uDEE1\uFE0F"} Admin Access</div>}
 </div>
 
 <div className="sb-section">
-<div className="sb-label">{isAdmin?"Team Members":"My Dashboard"}</div>
-{isAdmin&&<button className={"sb-btn"+(selPerson==="ALL"?" active":"")} onClick={function(){setSelPerson("ALL");setJayaSheet("ALL")}}>
-<span className="sb-icon">{"\uD83D\uDC65"}</span>All Team
+<div className="sb-label">Team Members</div>
+<button className={"sb-btn"+(selPerson==="ALL"?" active":"")} onClick={function(){setSelPerson("ALL");setJayaSheet("ALL")}}>
+<span className="sb-icon">👥</span>All Team
 <span className="sb-count">{rawData.length||"..."}</span>
-</button>}
-{isAdmin?PERSONS.map(function(per){var ct=(allData[per.name]||[]).length;var ac=selPerson===per.name;return <button key={per.name} className={"sb-btn"+(ac?" active":"")} onClick={function(){if(ac){setSelPerson("ALL");setJayaSheet("ALL")}else{setSelPerson(per.name);if(per.name!=="Jaya")setJayaSheet("ALL")}}} style={ac?{background:"linear-gradient(135deg,"+per.color+","+per.color+"cc)"}:{}}>
-<span className="sb-icon" style={{color:ac?"#fff":per.color}}>{"\u25CF"}</span>{per.name}
-<span className="sb-count">{ct||"..."}</span>
-</button>})
-:lockedPersonObj&&<button className="sb-btn active" style={{background:"linear-gradient(135deg,"+lockedPersonObj.color+","+lockedPersonObj.color+"cc)",cursor:"default"}}>
-<span className="sb-icon" style={{color:"#fff"}}>{"\u25CF"}</span>{lockedPerson}
-<span className="sb-count">{(allData[lockedPerson]||[]).length||"..."}</span>
 </button>
-}
+{PERSONS.map(function(p){var ct=(allData[p.name]||[]).length;var ac=selPerson===p.name;return <button key={p.name} className={"sb-btn"+(ac?" active":"")} onClick={function(){if(ac){setSelPerson("ALL");setJayaSheet("ALL")}else{setSelPerson(p.name);if(p.name!=="Jaya")setJayaSheet("ALL")}}} style={ac?{background:"linear-gradient(135deg,"+p.color+","+p.color+"cc)"}:{}}>
+<span className="sb-icon" style={{color:ac?"#fff":p.color}}>●</span>{p.name}
+<span className="sb-count">{ct||"..."}</span>
+</button>})}
 </div>
-
-{isAdmin&&selPerson==="Jaya"&&<div className="sb-section">
-<div className="sb-label">Jaya Location</div>
-<button className={"sb-btn"+(jayaSheet==="ALL"?" active":"")} onClick={function(){setJayaSheet("ALL")}} style={{fontSize:12}}>All ({jayaCounts.total})</button>
-<button className={"sb-btn"+(jayaSheet==="HeadOffice"?" active":"")} onClick={function(){setJayaSheet("HeadOffice")}} style={{fontSize:12}}>Head Office ({jayaCounts.ho})</button>
-<button className={"sb-btn"+(jayaSheet==="Bangalore"?" active":"")} onClick={function(){setJayaSheet("Bangalore")}} style={{fontSize:12}}>Bangalore ({jayaCounts.bl})</button>
-</div>}
-
-{!isAdmin&&lockedPerson==="Jaya"&&<div className="sb-section">
-<div className="sb-label">Location</div>
-<button className={"sb-btn"+(jayaSheet==="ALL"?" active":"")} onClick={function(){setJayaSheet("ALL")}} style={{fontSize:12}}>All ({jayaCounts.total})</button>
-<button className={"sb-btn"+(jayaSheet==="HeadOffice"?" active":"")} onClick={function(){setJayaSheet("HeadOffice")}} style={{fontSize:12}}>Head Office ({jayaCounts.ho})</button>
-<button className={"sb-btn"+(jayaSheet==="Bangalore"?" active":"")} onClick={function(){setJayaSheet("Bangalore")}} style={{fontSize:12}}>Bangalore ({jayaCounts.bl})</button>
-</div>}
 
 <div className="sb-divider"/>
 <div className="sb-section">
@@ -321,12 +228,9 @@ return <div className="container">
 
 <div className="sb-divider"/>
 <div className="sb-section">
-{!isToday&&<button className="sb-btn" onClick={goToday} style={{background:"rgba(102,126,234,.15)",color:"#a5b4fc",border:"none"}}><span className="sb-icon">{"\uD83D\uDCC5"}</span>Go to Today</button>}
+{!isToday&&<button className="sb-btn" onClick={goToday} style={{background:"rgba(102,126,234,.15)",color:"#a5b4fc",border:"none"}}><span className="sb-icon">📅</span>Go to Today</button>}
 <button className="sb-btn" onClick={function(){if(!refreshing)fetchAll(false)}} style={{background:refreshing?"rgba(102,126,234,.2)":"rgba(255,255,255,.04)"}}>
-<span className="sb-icon" style={{display:"inline-flex",animation:refreshing?"spin .8s linear infinite":"none"}}>{"\uD83D\uDD04"}</span>{refreshing?"Syncing...":"Refresh Data"}
-</button>
-<button className="sb-btn" onClick={p.onLogout} style={{background:"rgba(220,38,38,.15)",color:"#fca5a5",border:"none",marginTop:4}}>
-<span className="sb-icon">{"\uD83D\uDEAA"}</span>Logout
+<span className="sb-icon" style={{display:"inline-flex",animation:refreshing?"spin .8s linear infinite":"none"}}>🔄</span>{refreshing?"Syncing...":"Refresh Data"}
 </button>
 </div>
 
@@ -340,13 +244,13 @@ return <div className="container">
 
 <div className="main">
 <div className="section-hdr">
-<h1>{isAdmin?(selPerson==="ALL"?"Dashboard Overview":selPerson+"'s Dashboard"):(lockedPerson+"'s Dashboard")}</h1>
-{isAdmin&&selPerson==="Jaya"&&<div className="loc-slicer">
+<h1>{selPerson==="ALL"?"Dashboard Overview":selPerson+"'s Dashboard"}</h1>
+{selPerson==="Jaya"&&<div className="loc-slicer">
 <button className={"loc-slicer-btn"+(jayaSheet==="ALL"?" active":"")} onClick={function(){setJayaSheet("ALL")}}>All ({jayaCounts.total})</button>
 <button className={"loc-slicer-btn"+(jayaSheet==="HeadOffice"?" active":"")} onClick={function(){setJayaSheet("HeadOffice")}}>Head Office ({jayaCounts.ho})</button>
 <button className={"loc-slicer-btn"+(jayaSheet==="Bangalore"?" active":"")} onClick={function(){setJayaSheet("Bangalore")}}>Bangalore ({jayaCounts.bl})</button>
 </div>}
-<p>{selDay>0?"March "+selDay+", 2026":(isToday?"Today \u2014 ":"")+wk.f+", March 2026"}{isSunday?" (Sunday \u2014 No calls)":""}</p>
+<p>{selDay>0?"March "+selDay+", 2026":(isToday?"Today — ":"")+wk.f+", March 2026"}{isSunday?" (Sunday — No calls)":""}</p>
 </div>
 
 <div className="card-grid" style={{gridTemplateColumns:"repeat(5,1fr)"}}>
@@ -358,8 +262,8 @@ return <div className="container">
 </div>
 
 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
-<button onClick={function(){setRespF(respF==="YES"?"ALL":"YES")}} style={{padding:"16px 20px",borderRadius:14,border:respF==="YES"?"2px solid #16a34a":"1px solid #d1fae5",background:respF==="YES"?"#f0fdf4":"#fff",display:"flex",alignItems:"center",gap:14}}><div style={{width:44,height:44,borderRadius:12,background:"#16a34a",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,flexShrink:0}}>{"\u2713"}</div><div style={{textAlign:"left"}}><div className="num" style={{fontSize:28,color:"#16a34a",lineHeight:1}}>{stats.ans}</div><div style={{fontSize:13,fontWeight:600,color:"#15803d",marginTop:3}}>Answered</div></div></button>
-<button onClick={function(){setRespF(respF==="NO"?"ALL":"NO")}} style={{padding:"16px 20px",borderRadius:14,border:respF==="NO"?"2px solid #dc2626":"1px solid #fecaca",background:respF==="NO"?"#fef2f2":"#fff",display:"flex",alignItems:"center",gap:14}}><div style={{width:44,height:44,borderRadius:12,background:"#dc2626",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,flexShrink:0}}>{"\u2717"}</div><div style={{textAlign:"left"}}><div className="num" style={{fontSize:28,color:"#dc2626",lineHeight:1}}>{stats.una}</div><div style={{fontSize:13,fontWeight:600,color:"#991b1b",marginTop:3}}>Not Answered</div></div></button>
+<button onClick={function(){setRespF(respF==="YES"?"ALL":"YES")}} style={{padding:"16px 20px",borderRadius:14,border:respF==="YES"?"2px solid #16a34a":"1px solid #d1fae5",background:respF==="YES"?"#f0fdf4":"#fff",display:"flex",alignItems:"center",gap:14}}><div style={{width:44,height:44,borderRadius:12,background:"#16a34a",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,flexShrink:0}}>✓</div><div style={{textAlign:"left"}}><div className="num" style={{fontSize:28,color:"#16a34a",lineHeight:1}}>{stats.ans}</div><div style={{fontSize:13,fontWeight:600,color:"#15803d",marginTop:3}}>Answered</div></div></button>
+<button onClick={function(){setRespF(respF==="NO"?"ALL":"NO")}} style={{padding:"16px 20px",borderRadius:14,border:respF==="NO"?"2px solid #dc2626":"1px solid #fecaca",background:respF==="NO"?"#fef2f2":"#fff",display:"flex",alignItems:"center",gap:14}}><div style={{width:44,height:44,borderRadius:12,background:"#dc2626",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,flexShrink:0}}>✗</div><div style={{textAlign:"left"}}><div className="num" style={{fontSize:28,color:"#dc2626",lineHeight:1}}>{stats.una}</div><div style={{fontSize:13,fontWeight:600,color:"#991b1b",marginTop:3}}>Not Answered</div></div></button>
 </div>
 
 <div className="card-white">
@@ -384,45 +288,45 @@ return <div className="container">
 </div>
 
 <div className="tbl-wrap" style={{marginBottom:24}}>
-<div className="tbl-hdr"><h3>{(isAdmin?(selPerson==="ALL"?"Team Scorecard":selPerson+"'s Scorecard"):(lockedPerson+"'s Scorecard"))+" \u2014 "+(selDay>0?"March "+selDay:wk.f)}</h3></div>
+<div className="tbl-hdr"><h3>{(selPerson==="ALL"?"Team Scorecard":selPerson+"'s Scorecard")+" — "+(selDay>0?"March "+selDay:wk.f)}</h3></div>
 <div className="tbl-scroll"><table className="tbl">
 <thead><tr>{["Person","Clients","Target","Called","Answered","On Track","Call %","Coverage","Score","Flags"].map(function(h){return <th key={h} style={{textAlign:h==="Person"||h==="Flags"?"left":"center"}}>{h}</th>})}</tr></thead>
-<tbody>{scores.filter(function(sc){return isAdmin?(selPerson==="ALL"||sc.name===selPerson):sc.name===lockedPerson}).map(function(sc,i){var sb=sc.sc>=70?"#f0fdf4":sc.sc>=40?"#fffbeb":"#fef2f2";var scc=sc.sc>=70?"#16a34a":sc.sc>=40?"#d97706":"#dc2626";return <tr key={sc.name}>
-<td style={{fontWeight:700,color:sc.color}}>{sc.name}</td>
-<td style={{textAlign:"center"}}>{sc.tot}</td>
-<td style={{textAlign:"center"}}><span className="num" style={{color:"#6b7280"}}>{sc.tg}</span></td>
-<td style={{textAlign:"center",color:"#667eea",fontWeight:600}}>{sc.cal}</td>
-<td style={{textAlign:"center",color:"#16a34a",fontWeight:600}}>{sc.ans}</td>
-<td style={{textAlign:"center",color:sc.cm>=50?"#16a34a":"#d97706"}}>{sc.otr}</td>
-<td style={{textAlign:"center"}}><span className="pill" style={{background:sc.cp>=70?"#f0fdf4":sc.cp>=40?"#fffbeb":"#fef2f2",color:sc.cp>=70?"#16a34a":sc.cp>=40?"#d97706":"#dc2626"}}>{sc.cp}%</span></td>
-<td style={{textAlign:"center"}}><span className="pill" style={{background:sc.cv>=60?"#f0fdf4":sc.cv>=30?"#fffbeb":"#fef2f2",color:sc.cv>=60?"#16a34a":sc.cv>=30?"#d97706":"#dc2626"}}>{sc.cv}%</span></td>
-<td style={{textAlign:"center"}}><span className="num pill" style={{background:sb,color:scc,fontSize:14,padding:"4px 14px"}}>{sc.sc}%</span></td>
-<td style={{fontSize:11}}>{sc.fl.length===0?<span style={{color:"#16a34a",fontWeight:600}}>No issues</span>:sc.fl.map(function(f,j){return <div key={j} style={{color:"#dc2626",fontWeight:600}}>{"\u2022 "+f}</div>})}</td>
+<tbody>{scores.filter(function(p){return selPerson==="ALL"||p.name===selPerson}).map(function(p,i){var sb=p.sc>=70?"#f0fdf4":p.sc>=40?"#fffbeb":"#fef2f2";var scc=p.sc>=70?"#16a34a":p.sc>=40?"#d97706":"#dc2626";return <tr key={p.name}>
+<td style={{fontWeight:700,color:p.color}}>{p.name}</td>
+<td style={{textAlign:"center"}}>{p.tot}</td>
+<td style={{textAlign:"center"}}><span className="num" style={{color:"#6b7280"}}>{p.tg}</span></td>
+<td style={{textAlign:"center",color:"#667eea",fontWeight:600}}>{p.cal}</td>
+<td style={{textAlign:"center",color:"#16a34a",fontWeight:600}}>{p.ans}</td>
+<td style={{textAlign:"center",color:p.cm>=50?"#16a34a":"#d97706"}}>{p.otr}</td>
+<td style={{textAlign:"center"}}><span className="pill" style={{background:p.cp>=70?"#f0fdf4":p.cp>=40?"#fffbeb":"#fef2f2",color:p.cp>=70?"#16a34a":p.cp>=40?"#d97706":"#dc2626"}}>{p.cp}%</span></td>
+<td style={{textAlign:"center"}}><span className="pill" style={{background:p.cv>=60?"#f0fdf4":p.cv>=30?"#fffbeb":"#fef2f2",color:p.cv>=60?"#16a34a":p.cv>=30?"#d97706":"#dc2626"}}>{p.cv}%</span></td>
+<td style={{textAlign:"center"}}><span className="num pill" style={{background:sb,color:scc,fontSize:14,padding:"4px 14px"}}>{p.sc}%</span></td>
+<td style={{fontSize:11}}>{p.fl.length===0?<span style={{color:"#16a34a",fontWeight:600}}>No issues</span>:p.fl.map(function(f,j){return <div key={j} style={{color:"#dc2626",fontWeight:600}}>{"\u2022 "+f}</div>})}</td>
 </tr>})}</tbody></table></div>
-<div style={{padding:"10px 24px",fontSize:11,color:"#9ca3af",borderTop:"1px solid #f3f4f6"}}>Score = Total Calls / Target {"\u00D7"} 100. Calls = YES + NO. Target: Nitasha & Surya=40/day, Disha=50/day, Jaya=60/day.</div>
+<div style={{padding:"10px 24px",fontSize:11,color:"#9ca3af",borderTop:"1px solid #f3f4f6"}}>Score = Total Calls / Target × 100. Calls = YES + NO. Target: Nitasha & Surya=40/day, Disha=50/day, Jaya=60/day.</div>
 </div>
 
 <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginBottom:12}}>
-<div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:14,color:"#9ca3af"}}>{"\uD83D\uDD0D"}</span><input className="search-input" type="text" placeholder="Search client..." value={search} onChange={function(e){setSearch(e.target.value)}}/></div>
+<div style={{position:"relative",flex:1,minWidth:200}}><span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:14,color:"#9ca3af"}}>🔍</span><input className="search-input" type="text" placeholder="Search client..." value={search} onChange={function(e){setSearch(e.target.value)}}/></div>
 {["ALL","PLATINUM","GOLD","SILVER"].map(function(cat){var mp={ALL:{a:"#667eea",i:"#f3f4f6",t:"#6b7280"},PLATINUM:{a:"#7c3aed",i:"#f5f3ff",t:"#7c3aed"},GOLD:{a:"#d97706",i:"#fffbeb",t:"#d97706"},SILVER:{a:"#2563eb",i:"#eff6ff",t:"#2563eb"}};var s=mp[cat];var ac=catF===cat;return <button key={cat} className="cat-btn" onClick={function(){setCatF(cat)}} style={{background:ac?s.a:s.i,color:ac?"#fff":s.t}}>{cat}{cat!=="ALL"?" ("+(stats.cc[cat]||0)+")":""}</button>})}
 <select value={sortBy} onChange={function(e){setSortBy(e.target.value)}} style={{padding:"8px 12px",borderRadius:10,border:"1.5px solid #e5e7eb",background:"#fff",color:"#374151",fontSize:12,fontWeight:600}}><option value="outstanding">Sort: Amount</option><option value="shortfall">Sort: Shortfall</option><option value="name">Sort: Name</option></select>
 </div>
 
-<div style={{fontSize:12,color:"#9ca3af",fontWeight:600,marginBottom:8}}>Showing {filtered.length} of {processed.length} clients{!isAdmin&&lockedPerson&&<span style={{color:"#667eea"}}> | {lockedPerson}</span>}{isAdmin&&selPerson!=="ALL"&&<span style={{color:"#667eea"}}> | {selPerson}</span>}</div>
+<div style={{fontSize:12,color:"#9ca3af",fontWeight:600,marginBottom:8}}>Showing {filtered.length} of {processed.length} clients{selPerson!=="ALL"&&<span style={{color:"#667eea"}}> | {selPerson}</span>}</div>
 
 <div className="tbl-wrap">
 <div className="tbl-scroll"><table className="tbl">
 <thead><tr>
 <th style={{position:"sticky",left:0,background:"#f9fafb",zIndex:2}}>Client Name</th>
-{isAdmin&&selPerson==="ALL"&&<th>Person</th>}
-{((isAdmin&&selPerson==="Jaya")||(!isAdmin&&lockedPerson==="Jaya"))&&jayaSheet==="ALL"&&<th>Sheet</th>}
+{selPerson==="ALL"&&<th>Person</th>}
+{selPerson==="Jaya"&&jayaSheet==="ALL"&&<th>Sheet</th>}
 <th>Category</th><th style={{textAlign:"right"}}>Outstanding</th><th>Overdue</th><th>Frequency</th><th style={{textAlign:"center"}}>Calls</th><th>Status</th>
 {wk.d.map(function(d){return <th key={d} style={{textAlign:"center",minWidth:28,color:SUN.indexOf(d)>=0?"#d4d4d8":"#6b7280",background:SUN.indexOf(d)>=0?"#fafafa":"#f9fafb"}}>{d}</th>})}
 </tr></thead>
 <tbody>{filtered.map(function(cl,i){var wa=cl.wdActive;var bc=cl.st==="no_calls"?"#dc2626":cl.st==="behind"?"#d97706":"#16a34a";return <tr key={i}>
 <td style={{fontWeight:600,color:"#111827",whiteSpace:"nowrap",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",borderLeft:"3px solid "+bc,position:"sticky",left:0,background:i%2===0?"#fff":"#fafafa",zIndex:1}}>{cl.name}</td>
-{isAdmin&&selPerson==="ALL"&&<td>{cl._person&&<span className="pill" style={{background:(PERSONS.find(function(per){return per.name===cl._person})||{color:"#667eea"}).color,color:"#fff",fontSize:10}}>{cl._person}</span>}</td>}
-{((isAdmin&&selPerson==="Jaya")||(!isAdmin&&lockedPerson==="Jaya"))&&jayaSheet==="ALL"&&<td><SSP v={cl._sheetSource}/></td>}
+{selPerson==="ALL"&&<td>{cl._person&&<span className="pill" style={{background:(PERSONS.find(function(p){return p.name===cl._person})||{color:"#667eea"}).color,color:"#fff",fontSize:10}}>{cl._person}</span>}</td>}
+{selPerson==="Jaya"&&jayaSheet==="ALL"&&<td><SSP v={cl._sheetSource}/></td>}
 <td><CP v={cl.category}/></td>
 <td style={{textAlign:"right"}}><span className="num" style={{color:cl.outstanding>50000?"#dc2626":"#374151",fontSize:13}}>{fmt(cl.outstanding)}</span></td>
 <td><DP v={cl.outstandingDays}/></td>
@@ -431,52 +335,11 @@ return <div className="container">
 <td><SB met={wa.met} short={wa.short} att={wa.att}/></td>
 {wk.d.map(function(d){var v=cl.calls[d];var bg=v==="YES"?"#dcfce7":v==="NO"?"#fee2e2":SUN.indexOf(d)>=0?"#fafafa":"#fff";var co=v==="YES"?"#166534":v==="NO"?"#991b1b":"#e5e7eb";return <td key={d} style={{textAlign:"center",fontSize:13,fontWeight:700,color:co,background:bg,minWidth:28}}>{v==="YES"?"\u2713":v==="NO"?"\u2717":"\u2022"}</td>})}
 </tr>})}</tbody></table></div>
-{filtered.length===0&&<div style={{padding:50,textAlign:"center",color:"#9ca3af"}}><div style={{fontSize:40,marginBottom:8}}>{isSunday?"\u2600":"\uD83D\uDCCB"}</div><div style={{fontSize:15,fontWeight:600,color:"#6b7280"}}>{isSunday?"Sunday \u2014 No calls scheduled":loading?"Loading data from Google Sheets...":rawData.length===0?(connected?"No data for "+(isAdmin?(selPerson==="ALL"?"any member":selPerson):lockedPerson):"Connecting..."):"No clients match filters"}</div></div>}
+{filtered.length===0&&<div style={{padding:50,textAlign:"center",color:"#9ca3af"}}><div style={{fontSize:40,marginBottom:8}}>{isSunday?"\u2600":"\uD83D\uDCCB"}</div><div style={{fontSize:15,fontWeight:600,color:"#6b7280"}}>{isSunday?"Sunday \u2014 No calls scheduled":loading?"Loading data from Google Sheets...":rawData.length===0?(connected?"No data for "+(selPerson==="ALL"?"any member":selPerson):"Connecting..."):"No clients match filters"}</div></div>}
 </div>
 
 </div>
 </div>
 }
-
-/* ====== ROOT AUTH WRAPPER ====== */
-function Root(){
-var viewParam=getViewParam();
-var _auth=useState(false);var authed=_auth[0],setAuthed=_auth[1];
-
-/* No ?view= param → show invalid page */
-if(!viewParam||!AUTH[viewParam]){
-return <div className="login-wrap">
-<div className="login-card">
-<div className="login-logo">{"\uD83D\uDCCA"} Collection Calling Tracker</div>
-<div className="login-sub">March 2026</div>
-<div className="login-invalid">
-<h2 style={{color:"#dc2626",fontSize:20,marginBottom:8}}>{"\u26A0\uFE0F"} Access Required</h2>
-<p style={{color:"#6b7280",fontSize:14,lineHeight:1.6}}>Please use the link shared with you to access your dashboard.</p>
-<div style={{marginTop:24,padding:16,background:"#f9fafb",borderRadius:12,textAlign:"left",fontSize:12,color:"#6b7280"}}>
-<div style={{fontWeight:700,color:"#374151",marginBottom:8}}>Valid links:</div>
-<div style={{fontFamily:"monospace",fontSize:11,lineHeight:2}}>
-<div>?view=admin</div>
-<div>?view=nitasha</div>
-<div>?view=surya</div>
-<div>?view=disha</div>
-<div>?view=jaya</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-}
-
-var authCfg=AUTH[viewParam];
-var isAdmin=viewParam==="admin";
-var lockedPerson=authCfg.person||null;
-
-if(!authed){
-return <LoginScreen authCfg={authCfg} onSuccess={function(){setAuthed(true)}}/>
-}
-
-return <App role={isAdmin?"admin":"member"} lockedPerson={lockedPerson} onLogout={function(){setAuthed(false)}}/>
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<Root/>);
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script></body></html>
