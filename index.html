@@ -122,7 +122,7 @@ if(Object.keys(nc).length===0){for(var rk in c){if(c.hasOwnProperty(rk)){var dn=
 var normKeys={};for(var nk in c){if(c.hasOwnProperty(nk)){normKeys[nk.replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim().toLowerCase()]=nk}}
 var out=0;var outNames=["outstanding amount","outstanding","current outstanding","amount"];
 for(var i=0;i<outNames.length;i++){var realKey=normKeys[outNames[i]];if(realKey!==undefined){var val=c[realKey];if(val!==undefined&&val!==null&&val!==""){var parsed=(typeof val==="number")?val:parseFloat(String(val).replace(/[^0-9.\-]/g,""));if(!isNaN(parsed)){out=parsed;break}}}}
-if(out===0){for(var key in c){if(c.hasOwnProperty(key)&&key!=="calls"&&key!=="_person"){var lk=key.replace(/[\r\n]+/g,' ').toLowerCase();if(lk.indexOf("outstanding")>=0||lk.indexOf("amount")>=0){var pv=(typeof c[key]==="number")?c[key]:parseFloat(String(c[key]).replace(/[^0-9.\-]/g,""));if(!isNaN(pv)&&pv!==0){out=pv;break}}}}}
+if(out===0){for(var key in c){if(c.hasOwnProperty(key)&&key!=="calls"&&key!=="_person"){var lk=key.replace(/[\r\n]+/g,' ').toLowerCase();if((lk.indexOf("outstanding")>=0||lk.indexOf("amount")>=0)&&lk.indexOf("days")<0&&lk.indexOf("from")<0){var pv=(typeof c[key]==="number")?c[key]:parseFloat(String(c[key]).replace(/[^0-9.\-]/g,""));if(!isNaN(pv)&&pv!==0){out=pv;break}}}}}
 var nm=String(c[normKeys["client name"]]||c[normKeys["name"]]||c.name||c.Name||"").trim();
 var cat=String(c[normKeys["category"]]||c.category||c.Category||"").replace(/[\r\n]+/g,' ').trim().toUpperCase();
 var od=String(c[normKeys["outstanding from(days)"]]||c[normKeys["outstanding from (days)"]]||c[normKeys["outstanding days"]]||c.outstandingDays||c.OutstandingDays||"").replace(/[\r\n]+/g,' ').trim();
