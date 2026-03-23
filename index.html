@@ -109,6 +109,21 @@ table{font-family:inherit;border-collapse:collapse}td,th{border:none}
 }
 
 .loc-slicer{display:flex;gap:6px;margin-top:8px;margin-bottom:16px}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100;animation:fadeIn .2s}
+.modal-card{background:#fff;border-radius:20px;padding:32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:fadeIn .3s}
+.modal-title{font-size:18px;font-weight:700;color:#1a1f36;margin-bottom:4px}
+.modal-sub{font-size:13px;color:#6b7280;margin-bottom:24px}
+.modal-label{display:block;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.modal-input{width:100%;padding:12px 14px;border-radius:12px;border:2px solid #e5e7eb;background:#f9fafb;font-size:14px;font-weight:500;outline:none;transition:all .2s;margin-bottom:14px}
+.modal-input:focus{border-color:#667eea;background:#fff;box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+.modal-input.merr{border-color:#dc2626}
+.modal-btns{display:flex;gap:10px;margin-top:8px}
+.modal-btn-cancel{flex:1;padding:12px;border-radius:12px;border:2px solid #e5e7eb;background:#fff;font-size:14px;font-weight:700;color:#6b7280;cursor:pointer;transition:all .15s}
+.modal-btn-cancel:hover{background:#f3f4f6}
+.modal-btn-save{flex:1;padding:12px;border-radius:12px;border:none;font-size:14px;font-weight:700;color:#fff;cursor:pointer;transition:all .15s}
+.modal-btn-save:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,.3)}
+.modal-success{text-align:center;color:#16a34a;font-size:13px;font-weight:600;margin-top:8px}
+.modal-error{text-align:center;color:#dc2626;font-size:12px;font-weight:600;margin-top:8px;min-height:18px}
 .loc-slicer-btn{padding:7px 18px;border-radius:20px;border:1.5px solid #e5e7eb;font-size:12px;font-weight:700;background:#fff;color:#6b7280;transition:all .15s}
 .loc-slicer-btn:hover{border-color:#f43f5e;color:#f43f5e;background:#fef2f2}
 .loc-slicer-btn.active{background:#f43f5e;color:#fff;border-color:#f43f5e;box-shadow:0 2px 8px rgba(244,63,94,.25)}
@@ -132,14 +147,51 @@ var PERSONS=[
 {name:"Jaya",url:"https://script.google.com/macros/s/AKfycbw6WVSMzFgg-lK4QIBJCD8ymRMb8JjZi8toddj-kXV9T_mNQqQk9DwUCF34EvztLgGj8A/exec",color:"#f43f5e",tgt:60}
 ];
 
-/* ====== AUTH CONFIG — Change PINs here ====== */
-var AUTH={
-admin:{pin:"0000",label:"Admin"},
-nitasha:{pin:"1001",label:"Nitasha",person:"Nitasha"},
-surya:{pin:"1002",label:"Surya",person:"Surya"},
-disha:{pin:"1003",label:"Disha",person:"Disha"},
-jaya:{pin:"1004",label:"Jaya",person:"Jaya"}
+/* ====== AUTH CONFIG ====== */
+/* PASTE YOUR DEPLOYED APPS SCRIPT URL BELOW */
+var PASSWORD_API_URL = "https://script.google.com/macros/s/AKfycbzaafOE0vStipZ0JaIdFouhdzxCkdR27UJAEP-xrqRQun3K6h_UdprVMzeg1hNVMvtgBA/exec";
+/* ========================= */
+
+var DEFAULT_PINS={admin:"0000",nitasha:"1001",surya:"1002",disha:"1003",jaya:"1004"};
+var AUTH_META={
+admin:{label:"Admin"},
+nitasha:{label:"Nitasha",person:"Nitasha"},
+surya:{label:"Surya",person:"Surya"},
+disha:{label:"Disha",person:"Disha"},
+jaya:{label:"Jaya",person:"Jaya"}
 };
+var AUTH={};
+function buildAuth(remotePins){
+var pins=Object.assign({},DEFAULT_PINS,remotePins||{});
+var auth={};
+for(var k in AUTH_META){if(AUTH_META.hasOwnProperty(k)){auth[k]=Object.assign({},AUTH_META[k],{pin:pins[k]||DEFAULT_PINS[k]||"0000"})}}
+AUTH=auth;return auth
+}
+function fetchPasswords(cb){
+if(!PASSWORD_API_URL||PASSWORD_API_URL.indexOf("PASTE")>=0){buildAuth({});cb(AUTH);return}
+var done=false;
+var fallback=setTimeout(function(){if(!done){done=true;buildAuth({});cb(AUTH)}},8000);
+/* try fetch first */
+try{
+var controller=new AbortController();
+var sig=controller.signal;
+var tm=setTimeout(function(){controller.abort()},5000);
+fetch(PASSWORD_API_URL+"?action=get&_t="+Date.now(),{redirect:"follow",signal:sig}).then(function(r){clearTimeout(tm);return r.json()}).then(function(r){if(!done&&r&&r.success&&r.passwords){done=true;clearTimeout(fallback);buildAuth(r.passwords);cb(AUTH)}}).catch(function(){clearTimeout(tm)})
+}catch(e){}
+/* also try JSONP as backup */
+try{
+var cbName="_pwcb_"+Date.now();
+window[cbName]=function(r){if(!done&&r&&r.success&&r.passwords){done=true;clearTimeout(fallback);buildAuth(r.passwords);cb(AUTH)}delete window[cbName];try{var el=document.getElementById(cbName);if(el)el.parentNode.removeChild(el)}catch(x){}};
+var sc=document.createElement("script");sc.id=cbName;sc.src=PASSWORD_API_URL+"?action=get&callback="+cbName+"&_t="+Date.now();sc.onerror=function(){delete window[cbName]};document.head.appendChild(sc)
+}catch(e){}
+}
+function savePasswordRemote(userKey,newPin,cb){
+AUTH[userKey].pin=newPin;
+if(!PASSWORD_API_URL||PASSWORD_API_URL.indexOf("PASTE")>=0){if(cb)cb(true);return}
+try{
+fetch(PASSWORD_API_URL+"?action=set&user="+encodeURIComponent(userKey)+"&pin="+encodeURIComponent(newPin)+"&_t="+Date.now(),{redirect:"follow"}).then(function(r){return r.json()}).then(function(r){if(cb)cb(r&&r.success)}).catch(function(){if(cb)cb(false)})
+}catch(e){if(cb)cb(false)}
+}
 /* ============================================= */
 
 var _now=new Date();var _td=(_now.getMonth()===2)?_now.getDate():16;var _tw=_td<=7?0:_td<=14?1:_td<=21?2:_td<=28?3:4;
@@ -225,6 +277,75 @@ return <div className="login-wrap">
 </div>
 }
 
+/* ====== CHANGE PASSWORD MODAL ====== */
+function ChangePasswordModal(p){
+var _cur=useState("");var cur=_cur[0],setCur=_cur[1];
+var _nw=useState("");var nw=_nw[0],setNw=_nw[1];
+var _conf=useState("");var conf=_conf[0],setConf=_conf[1];
+var _err=useState("");var err=_err[0],setErr=_err[1];
+var _ok=useState(false);var ok=_ok[0],setOk=_ok[1];
+var _saving=useState(false);var saving=_saving[0],setSaving=_saving[1];
+var _showCur=useState(false);var showCur=_showCur[0],setShowCur=_showCur[1];
+var _showNew=useState(false);var showNew=_showNew[0],setShowNew=_showNew[1];
+var userKey=p.userKey;
+var userColor=p.userColor||"#667eea";
+
+function handleSave(){
+setErr("");
+if(!cur){setErr("Enter your current password");return}
+if(cur!==AUTH[userKey].pin){setErr("Current password is incorrect");return}
+if(!nw){setErr("Enter a new password");return}
+if(nw.length<4){setErr("New password must be at least 4 characters");return}
+if(nw!==conf){setErr("New passwords don't match");return}
+if(nw===cur){setErr("New password must be different from current");return}
+setSaving(true);
+savePasswordRemote(userKey,nw,function(success){
+setSaving(false);
+if(success===false){setErr("Could not save. Please try again.");return}
+setOk(true);
+setTimeout(function(){p.onClose()},1500)
+})
+}
+function handleKey(e){if(e.key==="Enter")handleSave();if(e.key==="Escape")p.onClose()}
+
+if(ok){return <div className="modal-overlay" onClick={p.onClose}>
+<div className="modal-card" onClick={function(e){e.stopPropagation()}} style={{textAlign:"center",padding:"48px 32px"}}>
+<div style={{fontSize:48,marginBottom:12}}>{"\u2705"}</div>
+<div style={{fontSize:18,fontWeight:700,color:"#16a34a",marginBottom:6}}>Password Changed!</div>
+<div style={{fontSize:13,color:"#6b7280"}}>Your new password has been saved.</div>
+</div>
+</div>}
+
+return <div className="modal-overlay" onClick={p.onClose}>
+<div className="modal-card" onClick={function(e){e.stopPropagation()}}>
+<div className="modal-title">{"\uD83D\uDD10"} Change Password</div>
+<div className="modal-sub">Update your login password for {AUTH[userKey].label}</div>
+
+<label className="modal-label">Current Password</label>
+<div style={{position:"relative"}}>
+<input className={"modal-input"+(err.indexOf("current")>=0?" merr":"")} type={showCur?"text":"password"} placeholder="Enter current password" value={cur} onChange={function(e){setCur(e.target.value);setErr("")}} onKeyDown={handleKey} autoFocus style={{paddingRight:40}}/>
+<button onClick={function(){setShowCur(!showCur)}} style={{position:"absolute",right:12,top:12,background:"none",border:"none",fontSize:14,color:"#9ca3af",cursor:"pointer"}}>{showCur?"\uD83D\uDE48":"\uD83D\uDC41\uFE0F"}</button>
+</div>
+
+<label className="modal-label">New Password</label>
+<div style={{position:"relative"}}>
+<input className={"modal-input"+(err.indexOf("New")>=0||err.indexOf("match")>=0||err.indexOf("least")>=0?" merr":"")} type={showNew?"text":"password"} placeholder="Enter new password" value={nw} onChange={function(e){setNw(e.target.value);setErr("")}} onKeyDown={handleKey} style={{paddingRight:40}}/>
+<button onClick={function(){setShowNew(!showNew)}} style={{position:"absolute",right:12,top:12,background:"none",border:"none",fontSize:14,color:"#9ca3af",cursor:"pointer"}}>{showNew?"\uD83D\uDE48":"\uD83D\uDC41\uFE0F"}</button>
+</div>
+
+<label className="modal-label">Confirm New Password</label>
+<input className={"modal-input"+(err.indexOf("match")>=0?" merr":"")} type="password" placeholder="Re-enter new password" value={conf} onChange={function(e){setConf(e.target.value);setErr("")}} onKeyDown={handleKey}/>
+
+<div className="modal-error">{err}</div>
+
+<div className="modal-btns">
+<button className="modal-btn-cancel" onClick={p.onClose} disabled={saving}>Cancel</button>
+<button className="modal-btn-save" style={{background:"linear-gradient(135deg,"+userColor+","+userColor+"cc)",opacity:saving?.7:1}} onClick={handleSave} disabled={saving}>{saving?"Saving...":"Save Password"}</button>
+</div>
+</div>
+</div>
+}
+
 /* ====== MAIN APP ====== */
 function App(p){
 var isAdmin=p.role==="admin";
@@ -244,6 +365,7 @@ var _st=useState("");var search=_st[0],setSearch=_st[1];
 var _sb=useState("outstanding");var sortBy=_sb[0],setSortBy=_sb[1];
 var _ref=useState(false);var refreshing=_ref[0],setRefreshing=_ref[1];
 var _js=useState("ALL");var jayaSheet=_js[0],setJayaSheet=_js[1];
+var _pwm=useState(false);var showPwdModal=_pwm[0],setShowPwdModal=_pwm[1];
 var tr=useRef(null);
 var wk=WEEKS[selWeek];
 var goToday=function(){setSelWeek(_tw);setSelDay(_td)};
@@ -282,7 +404,7 @@ var scoreColor=teamScore>=70?"#16a34a":teamScore>=40?"#d97706":"#dc2626";
 var pct=tgtC>0?Math.round(called/tgtC*100):0;
 var lockedPersonObj=lockedPerson?PERSONS.find(function(per){return per.name===lockedPerson}):null;
 
-return <div className="container">
+return <React.Fragment><div className="container">
 
 <div className="sidebar">
 <div className="sb-header">
@@ -343,6 +465,9 @@ return <div className="container">
 {!isToday&&<button className="sb-btn" onClick={goToday} style={{background:"rgba(102,126,234,.15)",color:"#a5b4fc",border:"none"}}><span className="sb-icon">{"\uD83D\uDCC5"}</span>Go to Today</button>}
 <button className="sb-btn" onClick={function(){if(!refreshing)fetchAll(false)}} style={{background:refreshing?"rgba(102,126,234,.2)":"rgba(255,255,255,.04)"}}>
 <span className="sb-icon" style={{display:"inline-flex",animation:refreshing?"spin .8s linear infinite":"none"}}>{"\uD83D\uDD04"}</span>{refreshing?"Syncing...":"Refresh Data"}
+</button>
+<button className="sb-btn" onClick={function(){setShowPwdModal(true)}} style={{background:"rgba(255,255,255,.04)",border:"none"}}>
+<span className="sb-icon">{"\uD83D\uDD10"}</span>Change Password
 </button>
 <button className="sb-btn" onClick={p.onLogout} style={{background:"rgba(220,38,38,.15)",color:"#fca5a5",border:"none",marginTop:4}}>
 <span className="sb-icon">{"\uD83D\uDEAA"}</span>Logout
@@ -455,11 +580,32 @@ return <div className="container">
 
 </div>
 </div>
+
+{showPwdModal&&<ChangePasswordModal userKey={isAdmin?"admin":(lockedPerson?lockedPerson.toLowerCase():"admin")} userColor={lockedPersonObj?lockedPersonObj.color:"#667eea"} onClose={function(){setShowPwdModal(false)}}/>}
+</React.Fragment>
 }
 
 /* ====== ROOT AUTH WRAPPER ====== */
 function Root(){
 var _authUser=useState(null);var authUser=_authUser[0],setAuthUser=_authUser[1];
+var _ready=useState(false);var ready=_ready[0],setReady=_ready[1];
+
+useEffect(function(){
+fetchPasswords(function(){setReady(true)})
+},[]);
+
+if(!ready){
+return <div className="login-wrap">
+<div className="login-card" style={{textAlign:"center"}}>
+<div className="login-logo">{"\uD83D\uDCCA"} Collection Calling Tracker</div>
+<div className="login-sub">March 2026</div>
+<div style={{margin:"40px 0"}}>
+<div style={{width:40,height:40,border:"4px solid #e5e7eb",borderTopColor:"#667eea",borderRadius:"50%",animation:"spin .8s linear infinite",margin:"0 auto"}}/>
+<div style={{marginTop:16,color:"#6b7280",fontSize:13,fontWeight:600}}>Loading...</div>
+</div>
+</div>
+</div>
+}
 
 if(!authUser){
 return <LoginScreen onSuccess={function(userKey){setAuthUser(userKey)}}/>
