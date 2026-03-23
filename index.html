@@ -64,6 +64,10 @@ table{font-family:inherit;border-collapse:collapse}td,th{border:none}
 .section-hdr p{color:#6b7280;font-size:13px;margin-bottom:24px}
 
 .card-grid{display:grid;gap:16px;margin-bottom:24px}
+.kpi-grid{grid-template-columns:repeat(5,1fr)}
+.resp-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.resp-grid-3s{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.resp-grid-3o{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
 .kcard{background:#fff;padding:22px 24px;border-radius:16px;border:1px solid rgba(0,0,0,.04);position:relative;overflow:hidden;transition:all .2s}
 .kcard::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
 .kcard:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
@@ -101,11 +105,46 @@ table{font-family:inherit;border-collapse:collapse}td,th{border:none}
 .cat-btn:hover{transform:translateY(-1px)}
 
 @media(max-width:768px){
-.container{flex-direction:column}
-.sidebar{width:100%;max-height:none;overflow:visible}
-.main{padding:16px}
-.card-grid{grid-template-columns:1fr 1fr !important}
-.login-card{padding:32px 24px}
+.container{flex-direction:column;position:relative}
+.sidebar{position:fixed;top:0;left:0;width:280px;height:100vh;z-index:50;transform:translateX(-100%);transition:transform .3s ease;overflow-y:auto;box-shadow:none}
+.sidebar.mob-open{transform:translateX(0);box-shadow:4px 0 24px rgba(0,0,0,.3)}
+.mob-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:40}
+.mob-overlay.mob-show{display:block}
+.mob-topbar{display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(135deg,#1a1f36,#2d3561);color:#fff;position:sticky;top:0;z-index:30}
+.mob-hamburger{width:36px;height:36px;border-radius:10px;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
+.mob-topbar-title{font-size:14px;font-weight:700;flex:1;background:linear-gradient(135deg,#667eea,#a8b9ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.mob-topbar-status{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.main{padding:16px 12px 80px;min-height:calc(100vh - 60px)}
+.section-hdr h1{font-size:20px}
+.card-grid{grid-template-columns:1fr 1fr !important;gap:10px !important}
+.kpi-grid{grid-template-columns:repeat(2,1fr) !important}
+.resp-grid-2{grid-template-columns:1fr 1fr !important;gap:10px !important}
+.resp-grid-3s{grid-template-columns:1fr 1fr 1fr !important;gap:8px !important}
+.resp-grid-3o{grid-template-columns:1fr !important;gap:12px !important}
+.stat-btn .num{font-size:22px !important}
+.resp-grid-2 button{padding:12px !important;gap:10px !important}
+.resp-grid-2 button .num{font-size:22px !important}
+.resp-grid-3o .num{font-size:16px !important}
+.search-input{font-size:14px !important}
+.cat-btn{padding:5px 10px !important;font-size:11px !important}
+.tbl-hdr h3{font-size:13px}
+.section-hdr p{font-size:12px}
+.kcard{padding:14px 14px !important}
+.kcard-val{font-size:22px !important}
+.kcard-label{font-size:10px !important}
+.stat-btn{padding:12px 8px !important}
+.tbl{font-size:12px}
+.tbl th{padding:8px 10px;font-size:10px}
+.tbl td{padding:8px 10px;font-size:12px}
+.login-card{padding:28px 20px;margin:12px}
+.modal-card{margin:12px;padding:24px 20px}
+.loc-slicer{flex-wrap:wrap}
+.loc-slicer-btn{padding:6px 12px;font-size:11px}
+.card-white{padding:14px 16px}
+}
+@media(min-width:769px){
+.mob-topbar{display:none}
+.mob-overlay{display:none !important}
 }
 
 .loc-slicer{display:flex;gap:6px;margin-top:8px;margin-bottom:16px}
@@ -149,7 +188,7 @@ var PERSONS=[
 
 /* ====== AUTH CONFIG ====== */
 /* PASTE YOUR DEPLOYED APPS SCRIPT URL BELOW */
-var PASSWORD_API_URL = "https://script.google.com/macros/s/AKfycbzaafOE0vStipZ0JaIdFouhdzxCkdR27UJAEP-xrqRQun3K6h_UdprVMzeg1hNVMvtgBA/exec";
+var PASSWORD_API_URL = "https://script.google.com/macros/s/AKfycbwld7DBY7w4_aDdLD25wRjQBfCl2ESH6UJxWZ21QQwyUi9uwpb56XQwWecSJ9-MVQdpwQ/exec";
 /* ========================= */
 
 var DEFAULT_PINS={admin:"0000",nitasha:"1001",surya:"1002",disha:"1003",jaya:"1004"};
@@ -366,10 +405,12 @@ var _sb=useState("outstanding");var sortBy=_sb[0],setSortBy=_sb[1];
 var _ref=useState(false);var refreshing=_ref[0],setRefreshing=_ref[1];
 var _js=useState("ALL");var jayaSheet=_js[0],setJayaSheet=_js[1];
 var _pwm=useState(false);var showPwdModal=_pwm[0],setShowPwdModal=_pwm[1];
+var _mob=useState(false);var menuOpen=_mob[0],setMenuOpen=_mob[1];
 var tr=useRef(null);
 var wk=WEEKS[selWeek];
 var goToday=function(){setSelWeek(_tw);setSelDay(_td)};
 var isToday=selWeek===_tw&&selDay===_td;
+var closeMob=function(){setMenuOpen(false)};
 
 /* For non-admin, only fetch their own person's data */
 var personsToFetch=isAdmin?PERSONS:PERSONS.filter(function(per){return per.name===lockedPerson});
@@ -406,7 +447,19 @@ var lockedPersonObj=lockedPerson?PERSONS.find(function(per){return per.name===lo
 
 return <React.Fragment><div className="container">
 
-<div className="sidebar">
+<div className="mob-topbar">
+<button className="mob-hamburger" onClick={function(){setMenuOpen(!menuOpen)}}>{menuOpen?"\u2715":"\u2630"}</button>
+<div className="mob-topbar-title">{isAdmin?(selPerson==="ALL"?"Dashboard":selPerson):(lockedPerson||"Dashboard")}</div>
+<div className="mob-topbar-status" style={{background:connected?"#4ade80":"#94a3b8",animation:connected?"pulse 2s infinite":"none"}}/>
+{!isToday&&<button onClick={goToday} style={{background:"rgba(255,255,255,.12)",border:"none",color:"#a5b4fc",fontSize:11,fontWeight:700,padding:"6px 10px",borderRadius:8}}>{"\uD83D\uDCC5"} Today</button>}
+<button onClick={function(){if(!refreshing)fetchAll(false)}} style={{background:refreshing?"rgba(102,126,234,.3)":"rgba(255,255,255,.12)",border:"none",color:"#fff",fontSize:14,padding:"6px 8px",borderRadius:8}}>
+<span style={{display:"inline-flex",animation:refreshing?"spin .8s linear infinite":"none"}}>{"\uD83D\uDD04"}</span>
+</button>
+</div>
+
+<div className={"mob-overlay"+(menuOpen?" mob-show":"")} onClick={function(){setMenuOpen(false)}}/>
+
+<div className={"sidebar"+(menuOpen?" mob-open":"")}>
 <div className="sb-header">
 <div className="sb-logo">{"\uD83D\uDCCA"} Collection Calling Tracker</div>
 <div className="sb-sub">March 2026</div>
@@ -416,11 +469,11 @@ return <React.Fragment><div className="container">
 
 <div className="sb-section">
 <div className="sb-label">{isAdmin?"Team Members":"My Dashboard"}</div>
-{isAdmin&&<button className={"sb-btn"+(selPerson==="ALL"?" active":"")} onClick={function(){setSelPerson("ALL");setJayaSheet("ALL")}}>
+{isAdmin&&<button className={"sb-btn"+(selPerson==="ALL"?" active":"")} onClick={function(){setSelPerson("ALL");setJayaSheet("ALL");closeMob()}}>
 <span className="sb-icon">{"\uD83D\uDC65"}</span>All Team
 <span className="sb-count">{rawData.length||"..."}</span>
 </button>}
-{isAdmin?PERSONS.map(function(per){var ct=(allData[per.name]||[]).length;var ac=selPerson===per.name;return <button key={per.name} className={"sb-btn"+(ac?" active":"")} onClick={function(){if(ac){setSelPerson("ALL");setJayaSheet("ALL")}else{setSelPerson(per.name);if(per.name!=="Jaya")setJayaSheet("ALL")}}} style={ac?{background:"linear-gradient(135deg,"+per.color+","+per.color+"cc)"}:{}}>
+{isAdmin?PERSONS.map(function(per){var ct=(allData[per.name]||[]).length;var ac=selPerson===per.name;return <button key={per.name} className={"sb-btn"+(ac?" active":"")} onClick={function(){if(ac){setSelPerson("ALL");setJayaSheet("ALL")}else{setSelPerson(per.name);if(per.name!=="Jaya")setJayaSheet("ALL")}closeMob()}} style={ac?{background:"linear-gradient(135deg,"+per.color+","+per.color+"cc)"}:{}}>
 <span className="sb-icon" style={{color:ac?"#fff":per.color}}>{"\u25CF"}</span>{per.name}
 <span className="sb-count">{ct||"..."}</span>
 </button>})
@@ -433,40 +486,40 @@ return <React.Fragment><div className="container">
 
 {isAdmin&&selPerson==="Jaya"&&<div className="sb-section">
 <div className="sb-label">Jaya Location</div>
-<button className={"sb-btn"+(jayaSheet==="ALL"?" active":"")} onClick={function(){setJayaSheet("ALL")}} style={{fontSize:12}}>All ({jayaCounts.total})</button>
-<button className={"sb-btn"+(jayaSheet==="HeadOffice"?" active":"")} onClick={function(){setJayaSheet("HeadOffice")}} style={{fontSize:12}}>Head Office ({jayaCounts.ho})</button>
-<button className={"sb-btn"+(jayaSheet==="Bangalore"?" active":"")} onClick={function(){setJayaSheet("Bangalore")}} style={{fontSize:12}}>Bangalore ({jayaCounts.bl})</button>
+<button className={"sb-btn"+(jayaSheet==="ALL"?" active":"")} onClick={function(){setJayaSheet("ALL");closeMob()}} style={{fontSize:12}}>All ({jayaCounts.total})</button>
+<button className={"sb-btn"+(jayaSheet==="HeadOffice"?" active":"")} onClick={function(){setJayaSheet("HeadOffice");closeMob()}} style={{fontSize:12}}>Head Office ({jayaCounts.ho})</button>
+<button className={"sb-btn"+(jayaSheet==="Bangalore"?" active":"")} onClick={function(){setJayaSheet("Bangalore");closeMob()}} style={{fontSize:12}}>Bangalore ({jayaCounts.bl})</button>
 </div>}
 
 {!isAdmin&&lockedPerson==="Jaya"&&<div className="sb-section">
 <div className="sb-label">Location</div>
-<button className={"sb-btn"+(jayaSheet==="ALL"?" active":"")} onClick={function(){setJayaSheet("ALL")}} style={{fontSize:12}}>All ({jayaCounts.total})</button>
-<button className={"sb-btn"+(jayaSheet==="HeadOffice"?" active":"")} onClick={function(){setJayaSheet("HeadOffice")}} style={{fontSize:12}}>Head Office ({jayaCounts.ho})</button>
-<button className={"sb-btn"+(jayaSheet==="Bangalore"?" active":"")} onClick={function(){setJayaSheet("Bangalore")}} style={{fontSize:12}}>Bangalore ({jayaCounts.bl})</button>
+<button className={"sb-btn"+(jayaSheet==="ALL"?" active":"")} onClick={function(){setJayaSheet("ALL");closeMob()}} style={{fontSize:12}}>All ({jayaCounts.total})</button>
+<button className={"sb-btn"+(jayaSheet==="HeadOffice"?" active":"")} onClick={function(){setJayaSheet("HeadOffice");closeMob()}} style={{fontSize:12}}>Head Office ({jayaCounts.ho})</button>
+<button className={"sb-btn"+(jayaSheet==="Bangalore"?" active":"")} onClick={function(){setJayaSheet("Bangalore");closeMob()}} style={{fontSize:12}}>Bangalore ({jayaCounts.bl})</button>
 </div>}
 
 <div className="sb-divider"/>
 <div className="sb-section">
 <div className="sb-label">Period</div>
 <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
-{WEEKS.map(function(w,i){return <button key={i} className={"sb-mini-btn"+(selWeek===i?" active":"")} onClick={function(){setSelWeek(i);setSelDay(0)}} style={{flex:"1 1 auto",minWidth:36}}>{w.l}</button>})}
+{WEEKS.map(function(w,i){return <button key={i} className={"sb-mini-btn"+(selWeek===i?" active":"")} onClick={function(){setSelWeek(i);setSelDay(0);closeMob()}} style={{flex:"1 1 auto",minWidth:36}}>{w.l}</button>})}
 </div>
 <div style={{marginTop:8}}>
 <div className="sb-label" style={{marginBottom:6}}>Day Filter</div>
 <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
-<button className={"sb-mini-btn"+(selDay===0?" active":"")} onClick={function(){setSelDay(0)}} style={{minWidth:32}}>All</button>
-{wk.d.map(function(d){var isSun=SUN.indexOf(d)>=0;return <button key={d} className={"sb-mini-btn"+(selDay===d?" active":"")+(isSun?" sun":"")} onClick={function(){setSelDay(selDay===d?0:d)}} style={{minWidth:24}}>{d}</button>})}
+<button className={"sb-mini-btn"+(selDay===0?" active":"")} onClick={function(){setSelDay(0);closeMob()}} style={{minWidth:32}}>All</button>
+{wk.d.map(function(d){var isSun=SUN.indexOf(d)>=0;return <button key={d} className={"sb-mini-btn"+(selDay===d?" active":"")+(isSun?" sun":"")} onClick={function(){setSelDay(selDay===d?0:d);closeMob()}} style={{minWidth:24}}>{d}</button>})}
 </div>
 </div>
 </div>
 
 <div className="sb-divider"/>
 <div className="sb-section">
-{!isToday&&<button className="sb-btn" onClick={goToday} style={{background:"rgba(102,126,234,.15)",color:"#a5b4fc",border:"none"}}><span className="sb-icon">{"\uD83D\uDCC5"}</span>Go to Today</button>}
-<button className="sb-btn" onClick={function(){if(!refreshing)fetchAll(false)}} style={{background:refreshing?"rgba(102,126,234,.2)":"rgba(255,255,255,.04)"}}>
+{!isToday&&<button className="sb-btn" onClick={function(){goToday();closeMob()}} style={{background:"rgba(102,126,234,.15)",color:"#a5b4fc",border:"none"}}><span className="sb-icon">{"\uD83D\uDCC5"}</span>Go to Today</button>}
+<button className="sb-btn" onClick={function(){if(!refreshing)fetchAll(false);closeMob()}} style={{background:refreshing?"rgba(102,126,234,.2)":"rgba(255,255,255,.04)"}}>
 <span className="sb-icon" style={{display:"inline-flex",animation:refreshing?"spin .8s linear infinite":"none"}}>{"\uD83D\uDD04"}</span>{refreshing?"Syncing...":"Refresh Data"}
 </button>
-<button className="sb-btn" onClick={function(){setShowPwdModal(true)}} style={{background:"rgba(255,255,255,.04)",border:"none"}}>
+<button className="sb-btn" onClick={function(){setShowPwdModal(true);closeMob()}} style={{background:"rgba(255,255,255,.04)",border:"none"}}>
 <span className="sb-icon">{"\uD83D\uDD10"}</span>Change Password
 </button>
 <button className="sb-btn" onClick={p.onLogout} style={{background:"rgba(220,38,38,.15)",color:"#fca5a5",border:"none",marginTop:4}}>
@@ -493,7 +546,7 @@ return <React.Fragment><div className="container">
 <p>{selDay>0?"March "+selDay+", 2026":(isToday?"Today \u2014 ":"")+wk.f+", March 2026"}{isSunday?" (Sunday \u2014 No calls)":""}</p>
 </div>
 
-<div className="card-grid" style={{gridTemplateColumns:"repeat(5,1fr)"}}>
+<div className="card-grid kpi-grid">
 <div className="kcard" style={{borderTop:"4px solid "+scoreColor}}><div className="kcard-label">Score</div><div className="kcard-val num" style={{color:scoreColor}}>{teamScore}%</div><div className="kcard-sub" style={{color:"#6b7280"}}>{stats.totalAttempts} calls of {tgtC}</div></div>
 <div className="kcard" style={{borderTop:"4px solid #dc2626"}}><div className="kcard-label">Total Outstanding</div><div className="kcard-val num">{fmtS(stats.to)}</div><div className="kcard-sub" style={{color:"#dc2626"}}>All clients</div></div>
 <div className="kcard" style={{borderTop:"4px solid #6b7280"}}><div className="kcard-label">{selDay>0?"Target (Day "+selDay+")":"Target ("+wk.l+")"}</div><div className="kcard-val num">{tgtC}</div><div className="kcard-sub" style={{color:"#6b7280"}}>Daily: {dailyTgt}</div></div>
@@ -501,7 +554,7 @@ return <React.Fragment><div className="container">
 <div className="kcard" onClick={function(){setCallF(callF==="UNCALLED"?"ALL":"UNCALLED")}} style={{borderTop:"4px solid #f59e0b",cursor:"pointer",outline:callF==="UNCALLED"?"2px solid #f59e0b":"none"}}><div className="kcard-label">Pending</div><div className="kcard-val num" style={{color:"#f59e0b"}}>{Math.max(0,tgtC-called)}</div><div className="kcard-sub" style={{color:"#6b7280"}}>{called} of {tgtC} done</div></div>
 </div>
 
-<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
+<div className="resp-grid-2">
 <button onClick={function(){setRespF(respF==="YES"?"ALL":"YES")}} style={{padding:"16px 20px",borderRadius:14,border:respF==="YES"?"2px solid #16a34a":"1px solid #d1fae5",background:respF==="YES"?"#f0fdf4":"#fff",display:"flex",alignItems:"center",gap:14}}><div style={{width:44,height:44,borderRadius:12,background:"#16a34a",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,flexShrink:0}}>{"\u2713"}</div><div style={{textAlign:"left"}}><div className="num" style={{fontSize:28,color:"#16a34a",lineHeight:1}}>{stats.ans}</div><div style={{fontSize:13,fontWeight:600,color:"#15803d",marginTop:3}}>Answered</div></div></button>
 <button onClick={function(){setRespF(respF==="NO"?"ALL":"NO")}} style={{padding:"16px 20px",borderRadius:14,border:respF==="NO"?"2px solid #dc2626":"1px solid #fecaca",background:respF==="NO"?"#fef2f2":"#fff",display:"flex",alignItems:"center",gap:14}}><div style={{width:44,height:44,borderRadius:12,background:"#dc2626",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:18,flexShrink:0}}>{"\u2717"}</div><div style={{textAlign:"left"}}><div className="num" style={{fontSize:28,color:"#dc2626",lineHeight:1}}>{stats.una}</div><div style={{fontSize:13,fontWeight:600,color:"#991b1b",marginTop:3}}>Not Answered</div></div></button>
 </div>
@@ -514,12 +567,12 @@ return <React.Fragment><div className="container">
 <div className="progress-bar"><div className="progress-fill" style={{width:Math.min(100,pct)+"%",background:pct>=100?"#16a34a":"linear-gradient(90deg,#667eea,#764ba2)"}}/></div>
 </div>
 
-<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:20}}>
+<div className="resp-grid-3s">
 {[{l:"On Track",v:stats.onTrack,c:"#16a34a",f:"on_track"},{l:"Behind",v:stats.behind,c:"#d97706",f:"behind"},{l:"No Calls",v:stats.noCalls,c:"#dc2626",f:"no_calls"}].map(function(s){return <button key={s.l} className={"stat-btn"+(statF===s.f?" active":"")} onClick={function(){setStatF(statF===s.f?"ALL":s.f)}}><span className="num" style={{fontSize:28,color:s.c,lineHeight:1}}>{s.v}</span><span style={{fontSize:12,fontWeight:700,color:s.c}}>{s.l}</span></button>})}
 </div>
 
 <div className="card-white">
-<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:20}}>
+<div className="resp-grid-3o">
 <div><div style={{fontSize:10,color:"#6b7280",fontWeight:700,textTransform:"uppercase",letterSpacing:.5}}>Total Outstanding</div><div className="num" style={{fontSize:20,color:"#1a1f36",marginTop:4}}>{fmt(stats.to)}</div></div>
 <div><div style={{fontSize:10,color:"#16a34a",fontWeight:700,textTransform:"uppercase",letterSpacing:.5}}>Called Outstanding</div><div className="num" style={{fontSize:20,color:"#16a34a",marginTop:4}}>{fmt(stats.calledOut)}</div></div>
 <div><div style={{fontSize:10,color:"#dc2626",fontWeight:700,textTransform:"uppercase",letterSpacing:.5}}>Uncalled Outstanding</div><div className="num" style={{fontSize:20,color:"#dc2626",marginTop:4}}>{fmt(stats.uncalledOut)}</div></div>
