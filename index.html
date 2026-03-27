@@ -238,15 +238,15 @@ var nc={};var raw=c.calls||{};
 for(var k in raw){if(raw.hasOwnProperty(k)){var d=parseInt(k,10);var v=String(raw[k]).trim().toUpperCase();if(!isNaN(d)&&d>=1&&d<=31&&(v==="YES"||v==="NO"))nc[d]=v}}
 if(Object.keys(nc).length===0){for(var rk in c){if(c.hasOwnProperty(rk)){var dn=parseInt(rk,10);if(!isNaN(dn)&&dn>=1&&dn<=31){var rv=String(c[rk]).trim().toUpperCase();if(rv==="YES"||rv==="NO")nc[dn]=rv}}}}
 var normKeys={};for(var nk in c){if(c.hasOwnProperty(nk)){normKeys[nk.replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim().toLowerCase()]=nk}}
-var out=0;var outNames=["outstanding amount","outstanding","current outstanding","amount"];
-for(var i=0;i<outNames.length;i++){var realKey=normKeys[outNames[i]];if(realKey!==undefined){var val=c[realKey];if(val!==undefined&&val!==null&&val!==""){var parsed=(typeof val==="number")?val:parseFloat(String(val).replace(/[^0-9.\-]/g,""));if(!isNaN(parsed)){out=parsed;break}}}}
-if(out===0){for(var key in c){if(c.hasOwnProperty(key)&&key!=="calls"&&key!=="_person"){var lk=key.replace(/[\r\n]+/g,' ').toLowerCase();if((lk.indexOf("outstanding")>=0||lk.indexOf("amount")>=0)&&lk.indexOf("days")<0&&lk.indexOf("from")<0){var pv=(typeof c[key]==="number")?c[key]:parseFloat(String(c[key]).replace(/[^0-9.\-]/g,""));if(!isNaN(pv)&&pv!==0){out=pv;break}}}}}
+var out=0;var outFound=false;var outNames=["outstanding amount","outstanding","current outstanding","amount"];
+for(var i=0;i<outNames.length;i++){var realKey=normKeys[outNames[i]];if(realKey!==undefined){var val=c[realKey];if(val!==undefined&&val!==null&&val!==""){var parsed=(typeof val==="number")?val:parseFloat(String(val).replace(/[^0-9.\-]/g,""));if(!isNaN(parsed)){out=parsed;outFound=true;break}}}}
+if(out===0&&!outFound){for(var key in c){if(c.hasOwnProperty(key)&&key!=="calls"&&key!=="_person"){var lk=key.replace(/[\r\n]+/g,' ').toLowerCase();if((lk.indexOf("outstanding")>=0||lk.indexOf("amount")>=0)&&lk.indexOf("days")<0&&lk.indexOf("from")<0){var pv=(typeof c[key]==="number")?c[key]:parseFloat(String(c[key]).replace(/[^0-9.\-]/g,""));if(!isNaN(pv)&&pv!==0){out=pv;outFound=true;break}}}}}
 var nm=String(c[normKeys["client name"]]||c[normKeys["name"]]||c.name||c.Name||"").trim();
 var cat=String(c[normKeys["category"]]||c.category||c.Category||"").replace(/[\r\n]+/g,' ').trim().toUpperCase();
 var od=String(c[normKeys["outstanding from(days)"]]||c[normKeys["outstanding from (days)"]]||c[normKeys["outstanding days"]]||c.outstandingDays||c.OutstandingDays||"").replace(/[\r\n]+/g,' ').trim();
 var freq=String(c[normKeys["frequency of calling"]]||c[normKeys["frequency"]]||c.frequency||c.Frequency||"").replace(/[\r\n]+/g,' ').trim();
 var sheetSrc=c._sheetSource?String(c._sheetSource).trim():"HeadOffice";
-return{name:nm,category:cat,outstanding:out,outstandingDays:od,frequency:freq,calls:nc,_person:c._person||"",_sheetSource:sheetSrc}
+return{name:nm,category:cat,outstanding:out,_outstandingFound:outFound,outstandingDays:od,frequency:freq,calls:nc,_person:c._person||"",_sheetSource:sheetSrc}
 }
 var fmt=function(n){if(!n||n===0)return"0";if(n<0)return R+Math.abs(n).toLocaleString("en-IN");return R+n.toLocaleString("en-IN",{maximumFractionDigits:0})};
 var fmtS=function(n){if(!n||n===0)return"0";if(n>=10000000)return R+(n/10000000).toFixed(1)+"Cr";if(n>=100000)return R+(n/100000).toFixed(1)+"L";if(n>=1000)return R+(n/1000).toFixed(1)+"K";return fmt(n)};
@@ -426,7 +426,7 @@ var rawData=useMemo(function(){if(selPerson==="ALL"){var c=[];Object.keys(allDat
 var jayaCounts=useMemo(function(){var pd=allData["Jaya"]||[];var ho=0,bl=0;pd.forEach(function(x){if(x._sheetSource==="Bangalore")bl++;else ho++});return{total:pd.length,ho:ho,bl:bl}},[allData]);
 
 var isSunday=selDay>0&&SUN.indexOf(selDay)>=0;
-var processed=useMemo(function(){return rawData.map(function(c){var wdWeek=gWD(c,wk.d);var wdActive;if(selDay>0){var v=c.calls[selDay];var y=v==="YES"?1:0;var n=v==="NO"?1:0;var att=y+n;wdActive={req:1,yes:y,no:n,att:att,met:att>=1,short:Math.max(0,1-att)}}else{wdActive=wdWeek}var st="on_track";if(wdActive.att===0){st=c.outstanding<=0?"paid":"no_calls"}else if(!wdActive.met)st="behind";var dayVal=selDay>0?(c.calls[selDay]||null):null;return Object.assign({},c,{wd:wdWeek,wdActive:wdActive,st:st,dayVal:dayVal})})},[rawData,selWeek,selDay]);
+var processed=useMemo(function(){return rawData.map(function(c){var wdWeek=gWD(c,wk.d);var wdActive;if(selDay>0){var v=c.calls[selDay];var y=v==="YES"?1:0;var n=v==="NO"?1:0;var att=y+n;wdActive={req:1,yes:y,no:n,att:att,met:att>=1,short:Math.max(0,1-att)}}else{wdActive=wdWeek}var st="on_track";if(c._outstandingFound&&c.outstanding<=0)st="paid";else if(wdActive.att===0)st="no_calls";else if(!wdActive.met)st="behind";var dayVal=selDay>0?(c.calls[selDay]||null):null;return Object.assign({},c,{wd:wdWeek,wdActive:wdActive,st:st,dayVal:dayVal})})},[rawData,selWeek,selDay]);
 var workDays=wk.d.filter(function(d){return SUN.indexOf(d)<0}).length;
 var dailyTgt=selPerson==="ALL"?PERSONS.reduce(function(s,per){return s+per.tgt},0):(PERSONS.find(function(per){return per.name===selPerson})||{tgt:60}).tgt;
 var tgtC=selDay>0?(isSunday?0:dailyTgt):dailyTgt*workDays;
