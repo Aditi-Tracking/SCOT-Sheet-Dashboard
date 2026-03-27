@@ -251,7 +251,6 @@ var statusNames=["status","current status","payment status","client status","col
 for(var si=0;si<statusNames.length;si++){var sKey=normKeys[statusNames[si]];if(sKey!==undefined){var sv=c[sKey];if(sv!==undefined&&sv!==null&&String(sv).trim()!==""){sheetStatus=String(sv).replace(/[\r\n]+/g,' ').trim();break}}}
 if(!sheetStatus){for(var sck in c){if(c.hasOwnProperty(sck)&&sck!=="calls"&&sck!=="_person"&&sck!=="_sheetSource"){var slk=sck.replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim().toLowerCase();if(slk==="status"||slk==="current status"||slk==="payment status"||(slk.indexOf("status")>=0&&slk.indexOf("outstanding")<0&&slk.indexOf("http")<0)){var ssv=c[sck];if(ssv!==undefined&&ssv!==null&&String(ssv).trim()!==""){sheetStatus=String(ssv).replace(/[\r\n]+/g,' ').trim();break}}}}}
 if(!sheetStatus&&raw){for(var rsk in raw){if(raw.hasOwnProperty(rsk)){var rlk=String(rsk).replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim().toLowerCase();if(rlk.indexOf("status")>=0){var rsv=raw[rsk];if(rsv!==undefined&&rsv!==null&&String(rsv).trim()!==""&&String(rsv).trim()!=="YES"&&String(rsv).trim()!=="NO"){sheetStatus=String(rsv).replace(/[\r\n]+/g,' ').trim();break}}}}}
-if(!window._statusDebugLog)window._statusDebugLog={};if(!window._statusDebugLog[c._person||""]&&(c._person||"")){window._statusDebugLog[c._person||""]=true;console.log("[Tracker Debug] "+c._person+" - All keys:",Object.keys(c).filter(function(k){return k!=="_person"&&k!=="_sheetSource"}).join(", "));if(raw&&Object.keys(raw).length>0){var nonNumKeys=Object.keys(raw).filter(function(k){return isNaN(parseInt(k,10))});if(nonNumKeys.length>0)console.log("[Tracker Debug] "+c._person+" - Calls non-numeric keys:",nonNumKeys.join(", "))}if(sheetStatus)console.log("[Tracker Debug] "+c._person+" - Status found: '"+sheetStatus+"'");else console.log("[Tracker Debug] "+c._person+" - NO status column found. normKeys:",JSON.stringify(Object.keys(normKeys).filter(function(k){return k.indexOf("status")>=0||k.indexOf("remark")>=0||k.indexOf("payment")>=0})))}
 return{name:nm,category:cat,outstanding:out,_outstandingFound:outFound,outstandingDays:od,frequency:freq,calls:nc,_person:c._person||"",_sheetSource:sheetSrc,sheetStatus:sheetStatus}
 }
 var fmt=function(n){if(!n||n===0)return"0";if(n<0)return R+Math.abs(n).toLocaleString("en-IN");return R+n.toLocaleString("en-IN",{maximumFractionDigits:0})};
@@ -588,7 +587,7 @@ return <React.Fragment><div className="container">
 </button>})}
 {stats.paid===0&&stats.otherStatus===0&&<div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 16px",borderRadius:12,background:"#f9fafb",border:"1.5px solid #e5e7eb"}}>
 <span style={{fontSize:14}}>{"\u2139\uFE0F"}</span>
-<span style={{fontSize:13,fontWeight:600,color:"#9ca3af"}}>No status entries found — check browser console (F12) for debug info</span>
+<span style={{fontSize:13,fontWeight:600,color:"#9ca3af"}}>No status entries found in sheet</span>
 </div>}
 </div>
 </div>
