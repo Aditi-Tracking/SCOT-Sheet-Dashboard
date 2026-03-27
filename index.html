@@ -67,6 +67,7 @@ table{font-family:inherit;border-collapse:collapse}td,th{border:none}
 .kpi-grid{grid-template-columns:repeat(5,1fr)}
 .resp-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
 .resp-grid-3s{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.resp-grid-4s{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:20px}
 .resp-grid-3o{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
 .kcard{background:#fff;padding:22px 24px;border-radius:16px;border:1px solid rgba(0,0,0,.04);position:relative;overflow:hidden;transition:all .2s}
 .kcard::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
@@ -120,6 +121,7 @@ table{font-family:inherit;border-collapse:collapse}td,th{border:none}
 .kpi-grid{grid-template-columns:repeat(2,1fr) !important}
 .resp-grid-2{grid-template-columns:1fr 1fr !important;gap:10px !important}
 .resp-grid-3s{grid-template-columns:1fr 1fr 1fr !important;gap:8px !important}
+.resp-grid-4s{grid-template-columns:1fr 1fr !important;gap:8px !important}
 .resp-grid-3o{grid-template-columns:1fr !important;gap:12px !important}
 .stat-btn .num{font-size:22px !important}
 .resp-grid-2 button{padding:12px !important;gap:10px !important}
@@ -187,9 +189,7 @@ var PERSONS=[
 ];
 
 /* ====== AUTH CONFIG ====== */
-/* PASTE YOUR DEPLOYED APPS SCRIPT URL BELOW */
 var PASSWORD_API_URL = "https://script.google.com/macros/s/AKfycbzgW-6jXj-WrXbv6iSbJhxf0nNU9CsegbkjxTRXtDwi5A7kczS3Lm9UI0WoX75k30rW/exec";
-/* ========================= */
 
 var DEFAULT_PINS={admin:"0000",nitasha:"1001",surya:"1002",disha:"1003",jaya:"1004"};
 var AUTH_META={
@@ -210,14 +210,12 @@ function fetchPasswords(cb){
 if(!PASSWORD_API_URL||PASSWORD_API_URL.indexOf("PASTE")>=0){buildAuth({});cb(AUTH);return}
 var done=false;
 var fallback=setTimeout(function(){if(!done){done=true;buildAuth({});cb(AUTH)}},8000);
-/* try fetch first */
 try{
 var controller=new AbortController();
 var sig=controller.signal;
 var tm=setTimeout(function(){controller.abort()},5000);
 fetch(PASSWORD_API_URL+"?action=get&_t="+Date.now(),{redirect:"follow",signal:sig}).then(function(r){clearTimeout(tm);return r.json()}).then(function(r){if(!done&&r&&r.success&&r.passwords){done=true;clearTimeout(fallback);buildAuth(r.passwords);cb(AUTH)}}).catch(function(){clearTimeout(tm)})
 }catch(e){}
-/* also try JSONP as backup */
 try{
 var cbName="_pwcb_"+Date.now();
 window[cbName]=function(r){if(!done&&r&&r.success&&r.passwords){done=true;clearTimeout(fallback);buildAuth(r.passwords);cb(AUTH)}delete window[cbName];try{var el=document.getElementById(cbName);if(el)el.parentNode.removeChild(el)}catch(x){}};
@@ -231,7 +229,6 @@ try{
 fetch(PASSWORD_API_URL+"?action=set&user="+encodeURIComponent(userKey)+"&pin="+encodeURIComponent(newPin)+"&_t="+Date.now(),{redirect:"follow"}).then(function(r){return r.json()}).then(function(r){if(cb)cb(r&&r.success)}).catch(function(){if(cb)cb(false)})
 }catch(e){if(cb)cb(false)}
 }
-/* ============================================= */
 
 var _now=new Date();var _td=(_now.getMonth()===2)?_now.getDate():16;var _tw=_td<=7?0:_td<=14?1:_td<=21?2:_td<=28?3:4;
 var FD=[];
@@ -255,7 +252,7 @@ var fmt=function(n){if(!n||n===0)return"0";if(n<0)return R+Math.abs(n).toLocaleS
 var fmtS=function(n){if(!n||n===0)return"0";if(n>=10000000)return R+(n/10000000).toFixed(1)+"Cr";if(n>=100000)return R+(n/100000).toFixed(1)+"L";if(n>=1000)return R+(n/1000).toFixed(1)+"K";return fmt(n)};
 function gWD(c,days){var req=FM[c.frequency]||3;var y=0,n=0,t=0;days.forEach(function(d){var v=c.calls[d];if(v==="YES"){y++;t++}else if(v==="NO"){n++;t++}});return{req:req,yes:y,no:n,att:t,met:t>=req,short:Math.max(0,req-t)}}
 
-function SB(p){var c=p.att===0?{bg:"#fef2f2",cl:"#dc2626",lb:"NO CALLS"}:p.met?{bg:"#f0fdf4",cl:"#16a34a",lb:"ON TRACK"}:{bg:"#fffbeb",cl:"#d97706",lb:"SHORT "+p.short};return <span className="pill" style={{background:c.bg,color:c.cl}}>{c.lb}</span>}
+function SB(p){var c=p.paid?{bg:"#f0fdf4",cl:"#16a34a",lb:"PAID"}:p.att===0?{bg:"#fef2f2",cl:"#dc2626",lb:"NO CALLS"}:p.met?{bg:"#f0fdf4",cl:"#16a34a",lb:"ON TRACK"}:{bg:"#fffbeb",cl:"#d97706",lb:"SHORT "+p.short};return <span className="pill" style={{background:c.bg,color:c.cl}}>{c.lb}</span>}
 var CS={PLATINUM:{bg:"#f5f3ff",c:"#7c3aed"},GOLD:{bg:"#fffbeb",c:"#d97706"},SILVER:{bg:"#eff6ff",c:"#2563eb"}};
 function CP(p){var c=CS[p.v]||CS.SILVER;return <span className="pill" style={{background:c.bg,color:c.c}}>{p.v}</span>}
 function FP(p){var m={"Once a Week":{bg:"#fdf2f8",c:"#be185d"},"Twice a Week":{bg:"#fff7ed",c:"#c2410c"},"Thrice a Week":{bg:"#f0fdfa",c:"#0f766e"}};var c=m[p.v]||m["Thrice a Week"];return <span className="pill" style={{background:c.bg,color:c.c,fontSize:10}}>{p.v}</span>}
@@ -412,7 +409,6 @@ var goToday=function(){setSelWeek(_tw);setSelDay(_td)};
 var isToday=selWeek===_tw&&selDay===_td;
 var closeMob=function(){setMenuOpen(false)};
 
-/* For non-admin, only fetch their own person's data */
 var personsToFetch=isAdmin?PERSONS:PERSONS.filter(function(per){return per.name===lockedPerson});
 
 var fetchOne=useCallback(function(person){
@@ -430,12 +426,12 @@ var rawData=useMemo(function(){if(selPerson==="ALL"){var c=[];Object.keys(allDat
 var jayaCounts=useMemo(function(){var pd=allData["Jaya"]||[];var ho=0,bl=0;pd.forEach(function(x){if(x._sheetSource==="Bangalore")bl++;else ho++});return{total:pd.length,ho:ho,bl:bl}},[allData]);
 
 var isSunday=selDay>0&&SUN.indexOf(selDay)>=0;
-var processed=useMemo(function(){return rawData.map(function(c){var wdWeek=gWD(c,wk.d);var wdActive;if(selDay>0){var v=c.calls[selDay];var y=v==="YES"?1:0;var n=v==="NO"?1:0;var att=y+n;wdActive={req:1,yes:y,no:n,att:att,met:att>=1,short:Math.max(0,1-att)}}else{wdActive=wdWeek}var st="on_track";if(wdActive.att===0)st="no_calls";else if(!wdActive.met)st="behind";var dayVal=selDay>0?(c.calls[selDay]||null):null;return Object.assign({},c,{wd:wdWeek,wdActive:wdActive,st:st,dayVal:dayVal})})},[rawData,selWeek,selDay]);
+var processed=useMemo(function(){return rawData.map(function(c){var wdWeek=gWD(c,wk.d);var wdActive;if(selDay>0){var v=c.calls[selDay];var y=v==="YES"?1:0;var n=v==="NO"?1:0;var att=y+n;wdActive={req:1,yes:y,no:n,att:att,met:att>=1,short:Math.max(0,1-att)}}else{wdActive=wdWeek}var st="on_track";if(wdActive.att===0){st=c.outstanding<=0?"paid":"no_calls"}else if(!wdActive.met)st="behind";var dayVal=selDay>0?(c.calls[selDay]||null):null;return Object.assign({},c,{wd:wdWeek,wdActive:wdActive,st:st,dayVal:dayVal})})},[rawData,selWeek,selDay]);
 var workDays=wk.d.filter(function(d){return SUN.indexOf(d)<0}).length;
 var dailyTgt=selPerson==="ALL"?PERSONS.reduce(function(s,per){return s+per.tgt},0):(PERSONS.find(function(per){return per.name===selPerson})||{tgt:60}).tgt;
 var tgtC=selDay>0?(isSunday?0:dailyTgt):dailyTgt*workDays;
 var filtered=useMemo(function(){var d=processed.slice();if(isSunday)return[];if(catF!=="ALL")d=d.filter(function(x){return x.category===catF});if(statF!=="ALL")d=d.filter(function(x){return x.st===statF});if(selDay>0){if(callF==="CALLED")d=d.filter(function(x){return x.dayVal==="YES"||x.dayVal==="NO"});if(callF==="UNCALLED")d=d.filter(function(x){return x.dayVal!=="YES"&&x.dayVal!=="NO"});if(respF==="YES")d=d.filter(function(x){return x.dayVal==="YES"});if(respF==="NO")d=d.filter(function(x){return x.dayVal==="NO"})}else{if(callF==="CALLED")d=d.filter(function(x){return x.wd.att>0});if(callF==="UNCALLED")d=d.filter(function(x){return x.wd.att===0});if(respF==="YES")d=d.filter(function(x){return x.wd.yes>0});if(respF==="NO")d=d.filter(function(x){return x.wd.no>0&&x.wd.yes===0})}if(search)d=d.filter(function(x){return x.name.toLowerCase().indexOf(search.toLowerCase())>=0});d.sort(function(a,b){return sortBy==="outstanding"?b.outstanding-a.outstanding:sortBy==="shortfall"?b.wdActive.short-a.wdActive.short:a.name.localeCompare(b.name)});return d},[processed,catF,statF,callF,respF,search,sortBy,selDay,isSunday]);
-var stats=useMemo(function(){var t=processed.length,on=0,bh=0,nc=0,ans=0,una=0,to=0,totalAttempts=0;var cc={PLATINUM:0,GOLD:0,SILVER:0};if(isSunday)return{total:t,onTrack:0,behind:0,noCalls:t,ans:0,una:0,to:0,calledOut:0,uncalledOut:0,totalAttempts:0,cc:cc};processed.forEach(function(d){if(d.st==="on_track")on++;else if(d.st==="behind")bh++;else nc++;if(selDay>0){if(d.dayVal==="YES"){ans++;totalAttempts++}else if(d.dayVal==="NO"){una++;totalAttempts++}}else{ans+=d.wdActive.yes;una+=d.wdActive.no;totalAttempts+=d.wdActive.att}to+=Math.max(0,d.outstanding);if(cc[d.category]!==undefined)cc[d.category]++});var calledOut=0,uncalledOut=0;processed.forEach(function(d){var amt=Math.max(0,d.outstanding);var wasCalled=selDay>0?(d.dayVal==="YES"||d.dayVal==="NO"):d.wdActive.att>0;if(wasCalled)calledOut+=amt;else uncalledOut+=amt});return{total:t,onTrack:on,behind:bh,noCalls:nc,ans:ans,una:una,to:to,calledOut:calledOut,uncalledOut:uncalledOut,totalAttempts:totalAttempts,cc:cc}},[processed,selDay,isSunday]);
+var stats=useMemo(function(){var t=processed.length,on=0,bh=0,nc=0,pd=0,ans=0,una=0,to=0,totalAttempts=0;var cc={PLATINUM:0,GOLD:0,SILVER:0};if(isSunday)return{total:t,onTrack:0,behind:0,noCalls:t,paid:0,ans:0,una:0,to:0,calledOut:0,uncalledOut:0,totalAttempts:0,cc:cc};processed.forEach(function(d){if(d.st==="on_track")on++;else if(d.st==="behind")bh++;else if(d.st==="paid")pd++;else nc++;if(selDay>0){if(d.dayVal==="YES"){ans++;totalAttempts++}else if(d.dayVal==="NO"){una++;totalAttempts++}}else{ans+=d.wdActive.yes;una+=d.wdActive.no;totalAttempts+=d.wdActive.att}to+=Math.max(0,d.outstanding);if(cc[d.category]!==undefined)cc[d.category]++});var calledOut=0,uncalledOut=0;processed.forEach(function(d){var amt=Math.max(0,d.outstanding);var wasCalled=selDay>0?(d.dayVal==="YES"||d.dayVal==="NO"):d.wdActive.att>0;if(wasCalled)calledOut+=amt;else uncalledOut+=amt});return{total:t,onTrack:on,behind:bh,noCalls:nc,paid:pd,ans:ans,una:una,to:to,calledOut:calledOut,uncalledOut:uncalledOut,totalAttempts:totalAttempts,cc:cc}},[processed,selDay,isSunday]);
 var called=stats.totalAttempts;
 var scores=useMemo(function(){var scoreDays=selDay>0?[selDay]:wk.d;var isSun=selDay>0&&SUN.indexOf(selDay)>=0;var personsForScore=isAdmin?PERSONS:PERSONS.filter(function(per){return per.name===lockedPerson});return personsForScore.map(function(per){var pd=(allData[per.name]||[]).map(function(c){var norm=normClient(Object.assign({},c,{_person:per.name}));var wd;if(selDay>0){var v=norm.calls[selDay];var y=v==="YES"?1:0;var n=v==="NO"?1:0;var att=y+n;wd={req:1,yes:y,no:n,att:att,met:att>=1,short:Math.max(0,1-att)}}else{wd=gWD(norm,scoreDays)}return Object.assign({},norm,{wd:wd})});var tot=pd.length,cal=0,ans=0,otr=0,ty=0;pd.forEach(function(c){var wasCalled=c.wd.att>0;if(wasCalled)cal++;ans+=c.wd.yes;if(c.wd.met&&wasCalled)otr++;ty+=c.wd.att});var wd2=selDay>0?(isSun?0:1):scoreDays.filter(function(d){return SUN.indexOf(d)<0}).length;var tg=per.tgt*wd2;var cp=tg>0?Math.round(ty/tg*100):0;var cv=tot>0?Math.round(cal/tot*100):0;var cm=tot>0?Math.round(otr/tot*100):0;var sc=tg>0?Math.min(100,Math.round(ty/tg*100)):0;var fl=[];if(isSun){fl.push("Sunday")}else{if(sc<25)fl.push("Critical");else if(sc<50)fl.push("Below 50%");if(cv<40)fl.push("Low coverage")}return{name:per.name,color:per.color,tgt:per.tgt,tot:tot,cal:cal,ans:ans,otr:otr,cp:cp,cv:cv,cm:cm,sc:sc,fl:fl,tg:tg}})},[allData,selWeek,selDay,isAdmin,lockedPerson]);
 
@@ -567,8 +563,8 @@ return <React.Fragment><div className="container">
 <div className="progress-bar"><div className="progress-fill" style={{width:Math.min(100,pct)+"%",background:pct>=100?"#16a34a":"linear-gradient(90deg,#667eea,#764ba2)"}}/></div>
 </div>
 
-<div className="resp-grid-3s">
-{[{l:"On Track",v:stats.onTrack,c:"#16a34a",f:"on_track"},{l:"Behind",v:stats.behind,c:"#d97706",f:"behind"},{l:"No Calls",v:stats.noCalls,c:"#dc2626",f:"no_calls"}].map(function(s){return <button key={s.l} className={"stat-btn"+(statF===s.f?" active":"")} onClick={function(){setStatF(statF===s.f?"ALL":s.f)}}><span className="num" style={{fontSize:28,color:s.c,lineHeight:1}}>{s.v}</span><span style={{fontSize:12,fontWeight:700,color:s.c}}>{s.l}</span></button>})}
+<div className="resp-grid-4s">
+{[{l:"On Track",v:stats.onTrack,c:"#16a34a",f:"on_track"},{l:"Behind",v:stats.behind,c:"#d97706",f:"behind"},{l:"No Calls",v:stats.noCalls,c:"#dc2626",f:"no_calls"},{l:"Paid",v:stats.paid,c:"#2563eb",f:"paid"}].map(function(s){return <button key={s.l} className={"stat-btn"+(statF===s.f?" active":"")} onClick={function(){setStatF(statF===s.f?"ALL":s.f)}}><span className="num" style={{fontSize:28,color:s.c,lineHeight:1}}>{s.v}</span><span style={{fontSize:12,fontWeight:700,color:s.c}}>{s.l}</span></button>})}
 </div>
 
 <div className="card-white">
@@ -625,7 +621,7 @@ return <React.Fragment><div className="container">
 <td><DP v={cl.outstandingDays}/></td>
 <td><FP v={cl.frequency}/></td>
 <td style={{textAlign:"center"}}><span className="num" style={{fontSize:13}}><span style={{color:wa.att>=wa.req?"#16a34a":"#d97706"}}>{wa.att}</span><span style={{color:"#d4d4d8"}}>/</span>{wa.req}</span></td>
-<td><SB met={wa.met} short={wa.short} att={wa.att}/></td>
+<td><SB met={wa.met} short={wa.short} att={wa.att} paid={cl.st==="paid"}/></td>
 {wk.d.map(function(d){var v=cl.calls[d];var bg=v==="YES"?"#dcfce7":v==="NO"?"#fee2e2":SUN.indexOf(d)>=0?"#fafafa":"#fff";var co=v==="YES"?"#166534":v==="NO"?"#991b1b":"#e5e7eb";return <td key={d} style={{textAlign:"center",fontSize:13,fontWeight:700,color:co,background:bg,minWidth:28}}>{v==="YES"?"\u2713":v==="NO"?"\u2717":"\u2022"}</td>})}
 </tr>})}</tbody></table></div>
 {filtered.length===0&&<div style={{padding:50,textAlign:"center",color:"#9ca3af"}}><div style={{fontSize:40,marginBottom:8}}>{isSunday?"\u2600":"\uD83D\uDCCB"}</div><div style={{fontSize:15,fontWeight:600,color:"#6b7280"}}>{isSunday?"Sunday \u2014 No calls scheduled":loading?"Loading data from Google Sheets...":rawData.length===0?(connected?"No data for "+(isAdmin?(selPerson==="ALL"?"any member":selPerson):lockedPerson):"Connecting..."):"No clients match filters"}</div></div>}
