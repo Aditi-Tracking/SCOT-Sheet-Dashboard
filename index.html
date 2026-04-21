@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<title>Collection Calling Tracker - March 2026</title>
+<title>Collection Calling Tracker - April 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -178,14 +178,14 @@ table{font-family:inherit;border-collapse:collapse}td,th{border:none}
 <script>window.onerror=function(m,s,l){if(m==="Script error."||l===0)return true;document.getElementById("root").innerHTML='<pre style="padding:20px;color:red;font-size:12px">'+m+'</pre>'}</script>
 <script type="text/babel">
 var useState=React.useState,useMemo=React.useMemo,useEffect=React.useEffect,useCallback=React.useCallback,useRef=React.useRef;
-var WEEKS=[{l:"W1",f:"Week 1 (1-7)",d:[1,2,3,4,5,6,7]},{l:"W2",f:"Week 2 (8-14)",d:[8,9,10,11,12,13,14]},{l:"W3",f:"Week 3 (15-21)",d:[15,16,17,18,19,20,21]},{l:"W4",f:"Week 4 (22-28)",d:[22,23,24,25,26,27,28]},{l:"W5",f:"Week 5 (29-31)",d:[29,30,31]}];
+var WEEKS=[{l:"W1",f:"Week 1 (1-7)",d:[1,2,3,4,5,6,7]},{l:"W2",f:"Week 2 (8-14)",d:[8,9,10,11,12,13,14]},{l:"W3",f:"Week 3 (15-21)",d:[15,16,17,18,19,20,21]},{l:"W4",f:"Week 4 (22-28)",d:[22,23,24,25,26,27,28]},{l:"W5",f:"Week 5 (29-30)",d:[29,30]}];
 var FM={"Once a Week":1,"Twice a Week":2,"Thrice a Week":3};
-var SUN=[1,8,15,22,29];var R="\u20B9";
+var SUN=[5,12,19,26];var R="\u20B9";
 var PERSONS=[
-{name:"Nitasha",url:"https://script.google.com/macros/s/AKfycbyzK-3QlwwM8hVB_L95KzeE7-74YkyMvQjzYQuSSNDfPmMUkwm1m172O_2skamz47c4/exec",color:"#8b5cf6",tgt:40},
-{name:"Surya",url:"https://script.google.com/macros/s/AKfycbxWRtR3Rj6H7nbjNNGWFwHJhPmGu8_AMjhrkNR5eIKbcuYAN8K7K7aE04sWbaXEhuOT/exec",color:"#3b82f6",tgt:40},
-{name:"Disha",url:"https://script.google.com/macros/s/AKfycbxGTaqdhHe0KhnkJXRXhB0Oah4EuQa3e58CJC0woj9KeEs9M1fEznBfNXSY5awbtNx8Bg/exec",color:"#06b6d4",tgt:50},
-{name:"Jaya",url:"https://script.google.com/macros/s/AKfycbw6WVSMzFgg-lK4QIBJCD8ymRMb8JjZi8toddj-kXV9T_mNQqQk9DwUCF34EvztLgGj8A/exec",color:"#f43f5e",tgt:60}
+{name:"Nitasha",url:"https://script.google.com/macros/s/AKfycbyzK-3QlwwM8hVB_L95KzeE7-74YkyMvQjzYQuSSNDfPmMUkwm1m172O_2skamz47c4/exec",aprilTab:"April",color:"#8b5cf6",tgt:40},
+{name:"Surya",url:"https://script.google.com/macros/s/AKfycbxWRtR3Rj6H7nbjNNGWFwHJhPmGu8_AMjhrkNR5eIKbcuYAN8K7K7aE04sWbaXEhuOT/exec",aprilTab:"April",color:"#3b82f6",tgt:40},
+{name:"Disha",url:"https://script.google.com/macros/s/AKfycbxGTaqdhHe0KhnkJXRXhB0Oah4EuQa3e58CJC0woj9KeEs9M1fEznBfNXSY5awbtNx8Bg/exec",aprilTab:"April",color:"#06b6d4",tgt:50},
+{name:"Jaya",url:"https://script.google.com/macros/s/AKfycbw6WVSMzFgg-lK4QIBJCD8ymRMb8JjZi8toddj-kXV9T_mNQqQk9DwUCF34EvztLgGj8A/exec",aprilParam:"month=april",color:"#f43f5e",tgt:60}
 ];
 
 /* ====== AUTH CONFIG ====== */
@@ -230,21 +230,23 @@ fetch(PASSWORD_API_URL+"?action=set&user="+encodeURIComponent(userKey)+"&pin="+e
 }catch(e){if(cb)cb(false)}
 }
 
-var _now=new Date();var _td=(_now.getMonth()===2)?_now.getDate():16;var _tw=_td<=7?0:_td<=14?1:_td<=21?2:_td<=28?3:4;
+var _now=new Date();var _td=(_now.getMonth()===3)?_now.getDate():21;var _tw=_td<=7?0:_td<=14?1:_td<=21?2:_td<=28?3:4;
 var FD=[];
 
 function normClient(c){
 var nc={};var raw=c.calls||{};
-for(var k in raw){if(raw.hasOwnProperty(k)){var d=parseInt(k,10);var v=String(raw[k]).trim().toUpperCase();if(!isNaN(d)&&d>=1&&d<=31&&(v==="YES"||v==="NO"))nc[d]=v}}
-if(Object.keys(nc).length===0){for(var rk in c){if(c.hasOwnProperty(rk)){var dn=parseInt(rk,10);if(!isNaN(dn)&&dn>=1&&dn<=31){var rv=String(c[rk]).trim().toUpperCase();if(rv==="YES"||rv==="NO")nc[dn]=rv}}}}
+for(var k in raw){if(raw.hasOwnProperty(k)){var d=parseInt(k,10);var v=String(raw[k]).trim().toUpperCase();if(!isNaN(d)&&d>=1&&d<=30&&(v==="YES"||v==="NO"))nc[d]=v}}
+if(Object.keys(nc).length===0){for(var rk in c){if(c.hasOwnProperty(rk)){var dn=parseInt(rk,10);if(!isNaN(dn)&&dn>=1&&dn<=30){var rv=String(c[rk]).trim().toUpperCase();if(rv==="YES"||rv==="NO")nc[dn]=rv}}}}
 var normKeys={};for(var nk in c){if(c.hasOwnProperty(nk)){normKeys[nk.replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim().toLowerCase()]=nk}}
 var out=0;var outFound=false;var outNames=["outstanding amount","outstanding","current outstanding","amount"];
 for(var i=0;i<outNames.length;i++){var realKey=normKeys[outNames[i]];if(realKey!==undefined){var val=c[realKey];if(val!==undefined&&val!==null&&val!==""){var parsed=(typeof val==="number")?val:parseFloat(String(val).replace(/[^0-9.\-]/g,""));if(!isNaN(parsed)){out=parsed;outFound=true;break}}}}
 if(out===0&&!outFound){for(var key in c){if(c.hasOwnProperty(key)&&key!=="calls"&&key!=="_person"){var lk=key.replace(/[\r\n]+/g,' ').toLowerCase();if((lk.indexOf("outstanding")>=0||lk.indexOf("amount")>=0)&&lk.indexOf("days")<0&&lk.indexOf("from")<0){var pv=(typeof c[key]==="number")?c[key]:parseFloat(String(c[key]).replace(/[^0-9.\-]/g,""));if(!isNaN(pv)&&pv!==0){out=pv;outFound=true;break}}}}}
 var nm=String(c[normKeys["client name"]]||c[normKeys["name"]]||c.name||c.Name||"").trim();
 var cat=String(c[normKeys["category"]]||c.category||c.Category||"").replace(/[\r\n]+/g,' ').trim().toUpperCase();
+if(!cat||cat==="UNDEFINED"||cat==="NULL"||cat==="")cat="SILVER";
 var od=String(c[normKeys["outstanding from(days)"]]||c[normKeys["outstanding from (days)"]]||c[normKeys["outstanding days"]]||c.outstandingDays||c.OutstandingDays||"").replace(/[\r\n]+/g,' ').trim();
 var freq=String(c[normKeys["frequency of calling"]]||c[normKeys["frequency"]]||c.frequency||c.Frequency||"").replace(/[\r\n]+/g,' ').trim();
+if(!freq||freq==="UNDEFINED"||freq==="NULL"||freq==="undefined")freq="Thrice a Week";
 var sheetSrc=c._sheetSource?String(c._sheetSource).trim():"HeadOffice";
 var sheetStatus="";
 var statusNames=["status","current status","payment status","client status","collection status"];
@@ -289,7 +291,7 @@ function handleKey(e){if(e.key==="Enter")handleSubmit()}
 return <div className="login-wrap">
 <div className="login-card">
 <div className="login-logo">{"\uD83D\uDCCA"} Collection Calling Tracker</div>
-<div className="login-sub">March 2026</div>
+<div className="login-sub">April 2026</div>
 
 <div style={{width:72,height:72,borderRadius:"50%",margin:"0 auto 20px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,fontWeight:800,color:"#fff",background:selUser?selUser.color:"#d1d5db",transition:"all .3s"}}>{selUser?(selUser.key==="admin"?"\uD83D\uDEE1\uFE0F":selUser.label.charAt(0)):"?"}</div>
 
@@ -387,6 +389,45 @@ return <div className="modal-overlay" onClick={p.onClose}>
 </div>
 }
 
+/* ====== FETCH & MERGE HELPERS ====== */
+function fetchUrl(url,personName){
+var sep=url.indexOf("?")>=0?"&":"?";
+function viaJSONP(){return new Promise(function(resolve){try{var cb="_cb_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);var u=url+sep+"callback="+cb+"&_t="+Date.now();var tm=setTimeout(function(){done();resolve([])},15000);function done(){clearTimeout(tm);delete window[cb];try{var el=document.getElementById(cb);if(el)el.parentNode.removeChild(el)}catch(x){}}window[cb]=function(r){done();if(r&&r.success&&r.data){resolve(r.data.map(function(c){return normClient(Object.assign({},c,{_person:personName}))}))}else{resolve([])}};var sc=document.createElement("script");sc.id=cb;sc.src=u;sc.onerror=function(){done();resolve([])};document.head.appendChild(sc)}catch(x){resolve([])}})}
+function viaFetch(){var controller;var signal;try{controller=new AbortController();signal=controller.signal}catch(x){return Promise.resolve(null)}var timeout=setTimeout(function(){controller.abort()},8000);return fetch(url+sep+"_t="+Date.now(),{redirect:"follow",signal:signal}).then(function(r){clearTimeout(timeout);return r.json()}).then(function(r){if(r&&r.success&&r.data){return r.data.map(function(c){return normClient(Object.assign({},c,{_person:personName}))})}return null}).catch(function(){clearTimeout(timeout);return null})}
+return viaFetch().then(function(result){if(result&&result.length>0)return result;return viaJSONP()})
+}
+
+function mergeClientData(marchClients,aprilClients){
+if(!aprilClients||aprilClients.length===0)return marchClients||[];
+if(!marchClients||marchClients.length===0)return aprilClients;
+/* Find earliest day in April source to know where March-overwritten data ends */
+var aprilStartDay=31;
+aprilClients.forEach(function(c){for(var d=1;d<=30;d++){if(c.calls[d])aprilStartDay=Math.min(aprilStartDay,d)}});
+if(aprilStartDay>30)aprilStartDay=14;/* fallback */
+var clientMap={};
+/* Merge key includes _sheetSource so HeadOffice and Bangalore clients stay separate */
+function mKey(c){return c.name.trim().toLowerCase()+"|"+(c._sheetSource||"")}
+/* March clients: only keep calls BEFORE aprilStartDay (those are April overwrites from the March sheet) */
+marchClients.forEach(function(c){
+var fc={};for(var d=1;d<aprilStartDay;d++){if(c.calls[d])fc[d]=c.calls[d]}
+clientMap[mKey(c)]=Object.assign({},c,{calls:fc})
+});
+/* April clients: overlay onto existing or add new */
+aprilClients.forEach(function(c){
+var key=mKey(c);
+if(clientMap[key]){
+var ex=clientMap[key];
+if(c._outstandingFound){ex.outstanding=c.outstanding;ex._outstandingFound=true}
+if(c.sheetStatus&&c.sheetStatus!==""&&c.sheetStatus!=="undefined")ex.sheetStatus=c.sheetStatus;
+if(c.category&&c.category!=="")ex.category=c.category;
+if(c.outstandingDays&&c.outstandingDays!=="")ex.outstandingDays=c.outstandingDays;
+if(c.frequency&&c.frequency!=="Thrice a Week"&&c.frequency!=="")ex.frequency=c.frequency;
+for(var d in c.calls){if(c.calls.hasOwnProperty(d))ex.calls[d]=c.calls[d]}
+}else{clientMap[key]=c}
+});
+return Object.keys(clientMap).map(function(k){return clientMap[k]})
+}
+
 /* ====== MAIN APP ====== */
 function App(p){
 var isAdmin=p.role==="admin";
@@ -417,9 +458,22 @@ var closeMob=function(){setMenuOpen(false)};
 var personsToFetch=isAdmin?PERSONS:PERSONS.filter(function(per){return per.name===lockedPerson});
 
 var fetchOne=useCallback(function(person){
-function viaJSONP(){return new Promise(function(resolve){try{var cb="_cb_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);var u=person.url+(person.url.indexOf("?")>=0?"&":"?")+"callback="+cb+"&_t="+Date.now();var tm=setTimeout(function(){done();resolve([])},15000);function done(){clearTimeout(tm);delete window[cb];try{var el=document.getElementById(cb);if(el)el.parentNode.removeChild(el)}catch(x){}}window[cb]=function(r){done();if(r&&r.success&&r.data){resolve(r.data.map(function(c){return normClient(Object.assign({},c,{_person:person.name}))}))}else{resolve([])}};var sc=document.createElement("script");sc.id=cb;sc.src=u;sc.onerror=function(){done();resolve([])};document.head.appendChild(sc)}catch(x){resolve([])}})}
-function viaFetch(){var controller;var signal;try{controller=new AbortController();signal=controller.signal}catch(x){return Promise.resolve(null)}var timeout=setTimeout(function(){controller.abort()},5000);return fetch(person.url+"?_t="+Date.now(),{redirect:"follow",signal:signal}).then(function(r){clearTimeout(timeout);return r.json()}).then(function(r){if(r&&r.success&&r.data){return r.data.map(function(c){return normClient(Object.assign({},c,{_person:person.name}))})}return null}).catch(function(){clearTimeout(timeout);return null})}
-return viaFetch().then(function(result){if(result&&result.length>0)return result;return viaJSONP()})
+var baseUrl=person.url;
+function makeUrl(tab){return tab?baseUrl+(baseUrl.indexOf("?")>=0?"&":"?")+"sheet="+encodeURIComponent(tab):baseUrl}
+function addParam(param){return baseUrl+(baseUrl.indexOf("?")>=0?"&":"?")+param}
+
+var marchPromise=fetchUrl(baseUrl,person.name);
+var aprilPromise;
+if(person.aprilParam){
+/* Jaya: script auto-discovers all April tabs via ?month=april */
+aprilPromise=fetchUrl(addParam(person.aprilParam),person.name);
+}else if(person.aprilTab){
+/* Others: specific April tab name via ?sheet=April */
+aprilPromise=fetchUrl(makeUrl(person.aprilTab),person.name);
+}else{aprilPromise=Promise.resolve([])}
+return Promise.all([marchPromise,aprilPromise]).then(function(results){
+return mergeClientData(results[0],results[1])
+})
 },[]);
 var fetchAll=useCallback(function(silent){if(!silent){setLoading(true);setRefreshing(true)}var pending=personsToFetch.length;var anySuccess=false;personsToFetch.forEach(function(per){fetchOne(per).then(function(data){pending--;if(data.length>0){anySuccess=true;setAllData(function(prev){var next=Object.assign({},prev);next[per.name]=data;return next});setConnected(true)}if(pending===0){if(!silent){setLoading(false);setRefreshing(false)}}})})
 },[fetchOne]);
@@ -463,7 +517,7 @@ return <React.Fragment><div className="container">
 <div className={"sidebar"+(menuOpen?" mob-open":"")}>
 <div className="sb-header">
 <div className="sb-logo">{"\uD83D\uDCCA"} Collection Calling Tracker</div>
-<div className="sb-sub">March 2026</div>
+<div className="sb-sub">April 2026</div>
 {!isAdmin&&lockedPerson&&<div style={{marginTop:8,padding:"6px 10px",background:"rgba(255,255,255,.08)",borderRadius:8,fontSize:11,color:"rgba(255,255,255,.5)",textAlign:"center"}}>{"\uD83D\uDD12"} Logged in as <strong style={{color:"#fff"}}>{lockedPerson}</strong></div>}
 {isAdmin&&<div style={{marginTop:8,padding:"6px 10px",background:"rgba(102,126,234,.2)",borderRadius:8,fontSize:11,color:"#a5b4fc",textAlign:"center",fontWeight:600}}>{"\uD83D\uDEE1\uFE0F"} Admin Access</div>}
 </div>
@@ -544,7 +598,7 @@ return <React.Fragment><div className="container">
 <button className={"loc-slicer-btn"+(jayaSheet==="HeadOffice"?" active":"")} onClick={function(){setJayaSheet("HeadOffice")}}>Head Office ({jayaCounts.ho})</button>
 <button className={"loc-slicer-btn"+(jayaSheet==="Bangalore"?" active":"")} onClick={function(){setJayaSheet("Bangalore")}}>Bangalore ({jayaCounts.bl})</button>
 </div>}
-<p>{selDay>0?"March "+selDay+", 2026":(isToday?"Today \u2014 ":"")+wk.f+", March 2026"}{isSunday?" (Sunday \u2014 No calls)":""}</p>
+<p>{selDay>0?"April "+selDay+", 2026":(isToday?"Today \u2014 ":"")+wk.f+", April 2026"}{isSunday?" (Sunday \u2014 No calls)":""}</p>
 </div>
 
 <div className="card-grid kpi-grid">
@@ -562,7 +616,7 @@ return <React.Fragment><div className="container">
 
 <div className="card-white">
 <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
-<span style={{fontSize:13,color:"#6b7280",fontWeight:600}}>{selDay>0?"March "+selDay:wk.f}{isToday?" (Today)":""}</span>
+<span style={{fontSize:13,color:"#6b7280",fontWeight:600}}>{selDay>0?"April "+selDay:wk.f}{isToday?" (Today)":""}</span>
 <span className="num" style={{fontSize:14,color:pct>=100?"#16a34a":"#667eea"}}>{called} / {tgtC} calls</span>
 </div>
 <div className="progress-bar"><div className="progress-fill" style={{width:Math.min(100,pct)+"%",background:pct>=100?"#16a34a":"linear-gradient(90deg,#667eea,#764ba2)"}}/></div>
@@ -602,7 +656,7 @@ return <React.Fragment><div className="container">
 </div>
 
 <div className="tbl-wrap" style={{marginBottom:24}}>
-<div className="tbl-hdr"><h3>{(isAdmin?(selPerson==="ALL"?"Team Scorecard":selPerson+"'s Scorecard"):(lockedPerson+"'s Scorecard"))+" \u2014 "+(selDay>0?"March "+selDay:wk.f)}</h3></div>
+<div className="tbl-hdr"><h3>{(isAdmin?(selPerson==="ALL"?"Team Scorecard":selPerson+"'s Scorecard"):(lockedPerson+"'s Scorecard"))+" \u2014 "+(selDay>0?"April "+selDay:wk.f)}</h3></div>
 <div className="tbl-scroll"><table className="tbl">
 <thead><tr>{["Person","Clients","Target","Called","Answered","On Track","No Calls","Paid","Remarks","Call %","Coverage","Score","Flags"].map(function(h){return <th key={h} style={{textAlign:h==="Person"||h==="Flags"?"left":"center"}}>{h}</th>})}</tr></thead>
 <tbody>{scores.filter(function(sc){return isAdmin?(selPerson==="ALL"||sc.name===selPerson):sc.name===lockedPerson}).map(function(sc,i){var sb=sc.sc>=70?"#f0fdf4":sc.sc>=40?"#fffbeb":"#fef2f2";var scc=sc.sc>=70?"#16a34a":sc.sc>=40?"#d97706":"#dc2626";return <tr key={sc.name}>
@@ -676,7 +730,7 @@ if(!ready){
 return <div className="login-wrap">
 <div className="login-card" style={{textAlign:"center"}}>
 <div className="login-logo">{"\uD83D\uDCCA"} Collection Calling Tracker</div>
-<div className="login-sub">March 2026</div>
+<div className="login-sub">April 2026</div>
 <div style={{margin:"40px 0"}}>
 <div style={{width:40,height:40,border:"4px solid #e5e7eb",borderTopColor:"#667eea",borderRadius:"50%",animation:"spin .8s linear infinite",margin:"0 auto"}}/>
 <div style={{marginTop:16,color:"#6b7280",fontSize:13,fontWeight:600}}>Loading...</div>
